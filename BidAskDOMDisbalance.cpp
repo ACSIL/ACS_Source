@@ -1,4 +1,5 @@
 // checking the moments when quotting values on Bid vs. Ask (for defined number of levels) on DOM exceeds a defined values
+// TODO: this is a extension of BidAskDomDisbalance - here it will show WHEN the differnec exceeds a particular level
 
 #include <vector>;
 
@@ -6,7 +7,7 @@
 
 SCDLLName("Bid Ask DOM Disbalance")
 
-    SCSFExport scsf_DOMBidAskDisbalance(SCStudyInterfaceRef sc) {
+SCSFExport scsf_DOMBidAskDisbalance(SCStudyInterfaceRef sc) {
     const int LEVELS = 5;
 
     // arrays holding ask and bid dom values for N last indexes
