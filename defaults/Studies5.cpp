@@ -69,10 +69,7 @@ SCSFExport scsf_ArmsEaseOfMovement(SCStudyInterfaceRef sc)
 		Input_MovingAverageType.Name = "Moving Average Type";
 		Input_MovingAverageType.SetMovAvgType(MOVAVGTYPE_SIMPLE);
 
-		sc.AutoLoop = 1;
-
-		
-		
+		sc.AutoLoop = 1;	
 
 		return;
 	}
