@@ -44,7 +44,7 @@ void logMsg(SCStudyInterfaceRef &sc, s_SCNewOrder &order) {
     sc.AddMessageToLog(internalOrderIDNumberString, 0);
 }
 
-void takeLong(SCStudyInterfaceRef sc, SCSubgraphRef &subgraphUpTrend) {
+void takeLong(SCStudyInterfaceRef sc, SCSubgraphRef &subgraphUpTrend, bool areTradingHours) {
     s_SCPositionData currentPosition;
     sc.GetTradePosition(currentPosition);
     s_SCNewOrder order;
@@ -61,37 +61,37 @@ void takeLong(SCStudyInterfaceRef sc, SCSubgraphRef &subgraphUpTrend) {
     bool hasThreeConsecutiveHigherHighs = sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2];
     bool hasThreeConsecutiveHigherLows = sc.Low[sc.Index] > sc.Low[sc.Index - 1] && sc.Low[sc.Index - 1] > sc.Low[sc.Index - 2];
 
-    if (hasThreeConsecutiveHigherHighs && hasThreeConsecutiveHigherLows & currentBarHasClosed) {
+    if (areTradingHours && hasThreeConsecutiveHigherHighs && hasThreeConsecutiveHigherLows & currentBarHasClosed) {
         subgraphUpTrend[sc.Index] = sc.Close[sc.Index];
         orderSuccesCheck = (int)sc.BuyEntry(order);
-        logMsg(sc, order);
+        // logMsg(sc, order);
     }
 }
 
-// void takeShort(SCStudyInterfaceRef &sc, SCSubgraphRef &subgraphDownTrend) {
-//     s_SCPositionData currentPosition;
-//     sc.GetTradePosition(currentPosition);
-//     s_SCNewOrder order;
-//     order.OrderQuantity = 1;
-//     order.OrderType = SCT_ORDERTYPE_MARKET;
-//     order.TextTag = "Simple trend pattern";
-//     order.AttachedOrderTarget1Type = SCT_ORDERTYPE_LIMIT;
-//     order.AttachedOrderStopAllType = SCT_ORDERTYPE_STOP;
-//     order.Target1Offset = 20 * sc.TickSize;
-//     order.Stop1Offset = 20 * sc.TickSize;
+void takeShort(SCStudyInterfaceRef &sc, SCSubgraphRef &subgraphDownTrend, bool areTradingHours) {
+    s_SCPositionData currentPosition;
+    sc.GetTradePosition(currentPosition);
+    s_SCNewOrder order;
+    order.OrderQuantity = 1;
+    order.OrderType = SCT_ORDERTYPE_MARKET;
+    order.TextTag = "Simple trend pattern";
+    order.AttachedOrderTarget1Type = SCT_ORDERTYPE_LIMIT;
+    order.AttachedOrderStopAllType = SCT_ORDERTYPE_STOP;
+    order.Target1Offset = 20 * sc.TickSize;
+    order.Stop1Offset = 20 * sc.TickSize;
 
-//     int orderSuccesCheck = 0;
+    int orderSuccesCheck = 0;
 
-//     bool currentBarHasClosed = sc.GetBarHasClosedStatus() == BHCS_BAR_HAS_CLOSED;
-//     bool hasThreeConsecutiveLowerHighs = sc.High[sc.Index] < sc.High[sc.Index - 1] && sc.High[sc.Index - 1] < sc.High[sc.Index - 2];
-//     bool hasThreeConsecutiveLowerLows = sc.Low[sc.Index] < sc.Low[sc.Index - 1] && sc.Low[sc.Index - 1] < sc.Low[sc.Index - 2];
+    bool currentBarHasClosed = sc.GetBarHasClosedStatus() == BHCS_BAR_HAS_CLOSED;
+    bool hasThreeConsecutiveLowerHighs = sc.High[sc.Index] < sc.High[sc.Index - 1] && sc.High[sc.Index - 1] < sc.High[sc.Index - 2];
+    bool hasThreeConsecutiveLowerLows = sc.Low[sc.Index] < sc.Low[sc.Index - 1] && sc.Low[sc.Index - 1] < sc.Low[sc.Index - 2];
 
-//     if (hasThreeConsecutiveLowerHighs && hasThreeConsecutiveLowerLows & currentBarHasClosed) {
-//         subgraphDownTrend[sc.Index] = sc.Close[sc.Index];
-//         orderSuccesCheck = (int)sc.BuyEntry(order);
-//         logMsg(sc, order);
-//     }
-// }
+    if (areTradingHours & hasThreeConsecutiveLowerHighs && hasThreeConsecutiveLowerLows & currentBarHasClosed) {
+        subgraphDownTrend[sc.Index] = sc.Close[sc.Index];
+        orderSuccesCheck = (int)sc.SellEntry(order);
+        // logMsg(sc, order);
+    }
+}
 
 SCSFExport scsf_SimpleTrendPattern(SCStudyInterfaceRef sc) {
     SCSubgraphRef subgraphUpTrend = sc.Subgraph[0];
@@ -115,8 +115,7 @@ SCSFExport scsf_SimpleTrendPattern(SCStudyInterfaceRef sc) {
     bool areTradingHours = sc.BaseDateTimeIn[sc.Index].GetTime() > inputStartTradingAt.GetTime() && sc.BaseDateTimeIn[sc.Index].GetTime() < inputStopTradingAt.GetTime();
     bool isTimeToFlat = sc.BaseDateTimeIn[sc.Index].GetTime() >= inputFlatPostionAt.GetTime();
 
-    if (areTradingHours) {
-        //tohle pak jeste obalim do filtru z vyssich timeframu treba...
-        takeLong(sc, subgraphUpTrend);
-    }
+    takeLong(sc, subgraphUpTrend, areTradingHours);
+    takeShort(sc, subgraphDownTrend, areTradingHours);
+    
 }
