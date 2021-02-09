@@ -6,44 +6,23 @@
 
 SCDLLName("Simple Trend Pattern");
 
-void setSubgraphs(SCSubgraphRef &Subgraph_upTrend,
-                  SCSubgraphRef &Subgraph_downTrend
-                //   SCSubgraphRef &Subgraph_buyEntry,
-                //   SCSubgraphRef &Subgraph_buyExit,
-                //   SCSubgraphRef &Subgraph_sellEntry,
-                //   SCSubgraphRef &Subgraph_sellExit
-                  ) {
-    Subgraph_upTrend.Name = "Up trend pattern";
-    Subgraph_upTrend.DrawStyle = DRAWSTYLE_ARROW_UP;
-    Subgraph_upTrend.PrimaryColor = RGB(0, 0, 255);
+void setInputs(SCInputRef &inputStartTradingAt, SCInputRef &inputStopTradingAt, SCInputRef &inputFlatPostionAt) {
+    inputStartTradingAt.Name = "Start trading at: ";
+    inputStartTradingAt.SetTime(HMS_TIME(8, 30, 0));
+    inputStopTradingAt.Name = "Stop trading at: ";
+    inputStopTradingAt.SetTime(HMS_TIME(15, 00, 0));
+    inputFlatPostionAt.Name = "Flat postion at: ";
+    inputFlatPostionAt.SetTime(HMS_TIME(15, 14, 30));
+}
 
-    Subgraph_downTrend.Name = "Down trend pattern";
-    Subgraph_downTrend.DrawStyle = DRAWSTYLE_ARROW_DOWN;
-    Subgraph_downTrend.PrimaryColor = RGB(0, 0, 255);
+void setSubgraphs(SCSubgraphRef &subgraphUpTrend, SCSubgraphRef &subgraphDownTrend) {
+    subgraphUpTrend.Name = "Up trend pattern";
+    subgraphUpTrend.DrawStyle = DRAWSTYLE_ARROW_UP;
+    subgraphUpTrend.PrimaryColor = RGB(0, 0, 255);
 
-    // Subgraph_buyEntry.Name = "Buy Entry";
-    // Subgraph_buyEntry.DrawStyle = DRAWSTYLE_ARROW_UP;
-    // Subgraph_buyEntry.PrimaryColor = RGB(0, 255, 0);
-    // Subgraph_buyEntry.LineWidth = 2;
-    // Subgraph_buyEntry.DrawZeros = false;
-
-    // Subgraph_buyExit.Name = "Buy Exit";
-    // Subgraph_buyExit.DrawStyle = DRAWSTYLE_ARROW_DOWN;
-    // Subgraph_buyExit.PrimaryColor = RGB(255, 128, 128);
-    // Subgraph_buyExit.LineWidth = 2;
-    // Subgraph_buyExit.DrawZeros = false;
-
-    // Subgraph_sellEntry.Name = "Sell Entry";
-    // Subgraph_sellEntry.DrawStyle = DRAWSTYLE_ARROW_DOWN;
-    // Subgraph_sellEntry.PrimaryColor = RGB(255, 0, 0);
-    // Subgraph_sellEntry.LineWidth = 2;
-    // Subgraph_sellEntry.DrawZeros = false;
-
-    // Subgraph_sellExit.Name = "Sell Exit";
-    // Subgraph_sellExit.DrawStyle = DRAWSTYLE_ARROW_UP;
-    // Subgraph_sellExit.PrimaryColor = RGB(128, 255, 128);
-    // Subgraph_sellExit.LineWidth = 2;
-    // Subgraph_sellExit.DrawZeros = false;
+    subgraphDownTrend.Name = "Down trend pattern";
+    subgraphDownTrend.DrawStyle = DRAWSTYLE_ARROW_DOWN;
+    subgraphDownTrend.PrimaryColor = RGB(0, 0, 255);
 }
 
 void setTradingOptions(SCStudyInterfaceRef &sc) {
@@ -59,62 +38,85 @@ void setTradingOptions(SCStudyInterfaceRef &sc) {
     sc.MaintainTradeStatisticsAndTradesData = true;
 }
 
-SCSFExport scsf_SimpleTrendPattern(SCStudyInterfaceRef sc) {
-    SCSubgraphRef Subgraph_upTrend = sc.Subgraph[0];
-    SCSubgraphRef Subgraph_downTrend = sc.Subgraph[1];
-    SCSubgraphRef Subgraph_sellEntry = sc.Subgraph[2];
-    SCSubgraphRef Subgraph_sellExit = sc.Subgraph[3];
-    SCSubgraphRef Subgraph_buyEntry = sc.Subgraph[4];
-    SCSubgraphRef Subgraph_buyExit = sc.Subgraph[5];
+void logMsg(SCStudyInterfaceRef &sc, s_SCNewOrder &order) {
+    SCString internalOrderIDNumberString;
+    internalOrderIDNumberString.Format("BuyEntry Internal Order ID: %d", order.InternalOrderID);
+    sc.AddMessageToLog(internalOrderIDNumberString, 0);
+}
 
-    if (sc.SetDefaults) {
-        sc.GraphName = "Simple Trend Pattern";
-        sc.GraphRegion = 0;
-        sc.AutoLoop = 1;
-
-        setSubgraphs(Subgraph_upTrend, Subgraph_downTrend);
-        // setTradingOptions(sc);
-
-        return;
-    }
-    sc.AllowMultipleEntriesInSameDirection = false;
-    sc.MaximumPositionAllowed = 1;
-    sc.SendOrdersToTradeService = false;
-    sc.AllowOppositeEntryWithOpposingPositionOrOrders = false;
-    sc.SupportAttachedOrdersForTrading = false;
-    sc.CancelAllOrdersOnEntriesAndReversals = true;
-    sc.AllowEntryWithWorkingOrders = false;
-    sc.CancelAllWorkingOrdersOnExit = false;
-    sc.AllowOnlyOneTradePerBar = true;
-    sc.MaintainTradeStatisticsAndTradesData = true;
-
-    float lastTradePrice = sc.Close[sc.Index];
+void takeLong(SCStudyInterfaceRef sc, SCSubgraphRef &subgraphUpTrend) {
     s_SCPositionData currentPosition;
     sc.GetTradePosition(currentPosition);
     s_SCNewOrder order;
     order.OrderQuantity = 1;
     order.OrderType = SCT_ORDERTYPE_MARKET;
     order.TextTag = "Simple trend pattern";
-    int64_t &buyEntryInternalOrderID = sc.GetPersistentInt64(1);
+    order.AttachedOrderTarget1Type = SCT_ORDERTYPE_LIMIT;
+    order.AttachedOrderStopAllType = SCT_ORDERTYPE_STOP;
+    order.Target1Offset = 20 * sc.TickSize;
+    order.Stop1Offset = 20 * sc.TickSize;
     int orderSuccesCheck = 0;
 
     bool currentBarHasClosed = sc.GetBarHasClosedStatus() == BHCS_BAR_HAS_CLOSED;
     bool hasThreeConsecutiveHigherHighs = sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2];
     bool hasThreeConsecutiveHigherLows = sc.Low[sc.Index] > sc.Low[sc.Index - 1] && sc.Low[sc.Index - 1] > sc.Low[sc.Index - 2];
-    bool hasThreeConsecutiveLowerHighs = sc.High[sc.Index] < sc.High[sc.Index - 1] && sc.High[sc.Index - 1] < sc.High[sc.Index - 2];
-    bool hasThreeConsecutiveLowerLows = sc.Low[sc.Index] < sc.Low[sc.Index - 1] && sc.Low[sc.Index - 1] < sc.Low[sc.Index - 2];
 
     if (hasThreeConsecutiveHigherHighs && hasThreeConsecutiveHigherLows & currentBarHasClosed) {
-        Subgraph_upTrend[sc.Index] = sc.Close[sc.Index];
+        subgraphUpTrend[sc.Index] = sc.Close[sc.Index];
         orderSuccesCheck = (int)sc.BuyEntry(order);
-        buyEntryInternalOrderID = order.InternalOrderID;
-        SCString internalOrderIDNumberString;
-        internalOrderIDNumberString.Format("BuyEntry Internal Order ID: %d", buyEntryInternalOrderID);
-        sc.AddMessageToLog(internalOrderIDNumberString, 0);
-        Subgraph_buyEntry[sc.Index] = sc.Low[sc.Index];
+        logMsg(sc, order);
+    }
+}
+
+// void takeShort(SCStudyInterfaceRef &sc, SCSubgraphRef &subgraphDownTrend) {
+//     s_SCPositionData currentPosition;
+//     sc.GetTradePosition(currentPosition);
+//     s_SCNewOrder order;
+//     order.OrderQuantity = 1;
+//     order.OrderType = SCT_ORDERTYPE_MARKET;
+//     order.TextTag = "Simple trend pattern";
+//     order.AttachedOrderTarget1Type = SCT_ORDERTYPE_LIMIT;
+//     order.AttachedOrderStopAllType = SCT_ORDERTYPE_STOP;
+//     order.Target1Offset = 20 * sc.TickSize;
+//     order.Stop1Offset = 20 * sc.TickSize;
+
+//     int orderSuccesCheck = 0;
+
+//     bool currentBarHasClosed = sc.GetBarHasClosedStatus() == BHCS_BAR_HAS_CLOSED;
+//     bool hasThreeConsecutiveLowerHighs = sc.High[sc.Index] < sc.High[sc.Index - 1] && sc.High[sc.Index - 1] < sc.High[sc.Index - 2];
+//     bool hasThreeConsecutiveLowerLows = sc.Low[sc.Index] < sc.Low[sc.Index - 1] && sc.Low[sc.Index - 1] < sc.Low[sc.Index - 2];
+
+//     if (hasThreeConsecutiveLowerHighs && hasThreeConsecutiveLowerLows & currentBarHasClosed) {
+//         subgraphDownTrend[sc.Index] = sc.Close[sc.Index];
+//         orderSuccesCheck = (int)sc.BuyEntry(order);
+//         logMsg(sc, order);
+//     }
+// }
+
+SCSFExport scsf_SimpleTrendPattern(SCStudyInterfaceRef sc) {
+    SCSubgraphRef subgraphUpTrend = sc.Subgraph[0];
+    SCSubgraphRef subgraphDownTrend = sc.Subgraph[1];
+
+    SCInputRef inputStartTradingAt = sc.Input[0];
+    SCInputRef inputStopTradingAt = sc.Input[1];
+    SCInputRef inputFlatPostionAt = sc.Input[2];
+
+    if (sc.SetDefaults) {
+        sc.GraphName = "Simple Trend Pattern";
+        sc.GraphRegion = 0;
+        sc.AutoLoop = 1;
+
+        setInputs(inputStartTradingAt, inputStopTradingAt, inputFlatPostionAt);
+        setSubgraphs(subgraphUpTrend, subgraphDownTrend);
+        setTradingOptions(sc);
+        return;
     }
 
-    // if (hasThreeConsecutiveLowerHighs && hasThreeConsecutiveLowerLows) {
-    //     Subgraph_downTrend[sc.Index] = sc.Index;
-    // }
+    bool areTradingHours = sc.BaseDateTimeIn[sc.Index].GetTime() > inputStartTradingAt.GetTime() && sc.BaseDateTimeIn[sc.Index].GetTime() < inputStopTradingAt.GetTime();
+    bool isTimeToFlat = sc.BaseDateTimeIn[sc.Index].GetTime() >= inputFlatPostionAt.GetTime();
+
+    if (areTradingHours) {
+        //tohle pak jeste obalim do filtru z vyssich timeframu treba...
+        takeLong(sc, subgraphUpTrend);
+    }
 }
