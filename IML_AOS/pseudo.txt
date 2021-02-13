@@ -1,0 +1,7 @@
+
+RESENI VSTUPU:
+if (soucet rv z jednotlivych trhu > X && rv kazdeho trhu > Y && trh kterz chci obchodovat je nad midem ) -> spusti se stav OBCHODUJ a ulozi se cas to perzistu
+if stav OBCHODUJ je platny a zaroven aktualni cas je mensi, nez cas od perzistu kdy se tenhle stav sepnul + nejaka definovana casova period && je cena na urcity hladine -> vstup
+
+
+
