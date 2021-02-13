@@ -33,10 +33,42 @@
 //     outFile.close();
 // }
 
-SCDLLName("Logger")
+SCDLLName("Logger");
 
-    SCSFExport scsf_LogEntryDetailsToFile(SCStudyInterfaceRef sc) {
+void printToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &study_1, SCFloatArray &study_2) {
+    int &p_logEntry = sc.GetPersistentInt(0);
+    int &p_previousPositionQty = sc.GetPersistentInt(1);
+
+    bool positionClosed = position.PositionQuantity == 0;
+    bool positionOpened = p_previousPositionQty == 0 && position.PositionQuantity != 0;
+    bool logEntryNotYetDone = p_logEntry == 0;
+
+    float valueOfStudy_1 = study_1[study_1.GetArraySize() - 1];
+    float valueOfStudy_2 = study_1[study_2.GetArraySize() - 1];
+
+    SCString stringToLog;
+    stringToLog.Format("Entry Price: %.02f, study_1: %.02f, study_2: %.02f", position.AveragePrice, valueOfStudy_1, valueOfStudy_2);
+
+    if (positionOpened && logEntryNotYetDone) {
+        sc.AddMessageToLog(stringToLog, 1);
+        p_logEntry = 1;
+    }
+    if (positionClosed) {
+        p_logEntry = 0;
+    }
+}
+
+void printToCSVFile(SCStudyInterfaceRef &sc, s_SCPositionData position) {
+    return;
+}
+
+SCSFExport scsf_LogEntryDetails(SCStudyInterfaceRef sc) {
     if (sc.SetDefaults) {
+        sc.Input[1].Name = "1. study";
+        sc.Input[2].Name = "2. study";
+        // sc.Input[3].Name = "3. study";
+        // sc.Input[4].Name = "4. study";
+
         sc.GraphRegion = 0;
         sc.GraphName = "Logger";
         return;
@@ -45,23 +77,11 @@ SCDLLName("Logger")
     s_SCPositionData position;
     sc.GetTradePosition(position);
 
-    SCString stringToLog;
-    stringToLog.Format("Position Price: %.02f", position.AveragePrice);
+    SCFloatArray study_1;
+    SCFloatArray study_2;
+    sc.GetStudyArrayFromChartUsingID(sc.Input[1].GetChartNumber(), sc.Input[1].GetStudyID(), sc.Input[1].GetSubgraphIndex(), study_1);
+    sc.GetStudyArrayFromChartUsingID(sc.Input[2].GetChartNumber(), sc.Input[2].GetStudyID(), sc.Input[2].GetSubgraphIndex(), study_2);
 
-    int& p_logEntry = sc.GetPersistentInt(0);
-    int& p_previousPositionQty = sc.GetPersistentInt(1);
-
-    bool positionClosed = position.PositionQuantity == 0;
-    bool positionOpened = p_previousPositionQty == 0 && position.PositionQuantity != 0;
-    bool logEntryNotYetDone = p_logEntry == 0;
-    
-    if (positionOpened && logEntryNotYetDone) {
-        sc.AddMessageToLog(stringToLog, 1);
-        p_logEntry = 1;
-    }
-    if (positionClosed){
-        p_logEntry = 0;
-    }
-
-    
+    printToMessageLog(sc, position, study_1, study_2);
+    // printToCSVFile(sc, position);
 }
