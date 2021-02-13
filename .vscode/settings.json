@@ -5,6 +5,8 @@
         "cmath": "cpp",
         "complex": "cpp",
         "valarray": "cpp",
-        "sstream": "cpp"
+        "sstream": "cpp",
+        "fstream": "cpp",
+        "utility": "cpp"
     }
 }
