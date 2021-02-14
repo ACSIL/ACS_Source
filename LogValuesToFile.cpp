@@ -3,7 +3,6 @@
 
 #include "sierrachart.h"
 
-
 SCDLLName("Logger");
 
 void printToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &volume, SCFloatArray &atr, SCFloatArray &cumDelta) {
@@ -37,6 +36,40 @@ std::string convertScStringToStdString(SCString input) {
     return output;
 }
 
+bool fileExists(const char *fileName) {
+    std::ifstream file(fileName);
+    return file.good();
+}
+
+bool fileIsEmpty(const char *fileName) {
+    std::ifstream inFile(fileName);
+    return inFile.peek() == std::ifstream::traits_type::eof();
+}
+
+void writeEntryDataToFile(const char *fileName, SCString &stringToLog, SCStudyInterfaceRef &sc) {
+    std::ofstream outFile;
+    outFile.open(fileName, std::ofstream::app);
+    if (outFile.is_open()) {
+        std::string data {stringToLog};
+        outFile << data << '\n';
+    } else {
+        sc.AddMessageToLog("Error writing into file", 1);
+    }
+    outFile.close();
+}
+
+void createFileAndWriteHeader(const char *fileName, SCStudyInterfaceRef &sc) {
+    std::ofstream outFile;
+    outFile.open(fileName, std::ofstream::app);
+    std::string header = "datetime, price, symbol, position, volume, atr, delta";  // TODO varibilni header, nebo to nak predat..
+    if (outFile.is_open()) {
+        outFile << header << '\n';
+    } else {
+        sc.AddMessageToLog("Error writing into file", 1);
+    }
+    outFile.close();
+}
+
 void printToCSVFile(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &volume, SCFloatArray &atr, SCFloatArray &cumDelta) {
     int &p_logEntryDone = sc.GetPersistentInt(2);
     int &p_previousPositionQty = sc.GetPersistentInt(3);
@@ -53,8 +86,8 @@ void printToCSVFile(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloat
     int year, month, day, hour, minute, second;
     entryDateTime.GetDateTimeYMDHMS(year, month, day, hour, minute, second);
 
-    SCString stringToLog;
-    stringToLog.Format(
+    SCString entryData;
+    entryData.Format(
         "%i-%i-%i %0.2i:%0.2i:%0.2i,"
         "%3.2f,"
         "%s,"
@@ -70,25 +103,15 @@ void printToCSVFile(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloat
         atrOnPrevBar,
         cumDeltaOnPrevBar);
 
-    std::string fileName{"ES_log.csv"};  // variable pres input
-    std::ofstream outFile{};
-    outFile.open(fileName, std::ofstream::app);
+    const char *fileName = "ES_log.csv";  // variable pres input
+    std::ofstream outFile;
     if (newPositionOpened && logEntryNotYetDone) {
-        sc.AddMessageToLog("New Pos opened", 1);
-        if (outFile.is_open()) {
-            sc.AddMessageToLog("Opened file", 1);
-            std::string log{stringToLog};
-            outFile << log << '\n';
-        } else {
-            sc.AddMessageToLog("Error writing into file", 1);
-        }
-        outFile.close();
+        if (!fileExists(fileName)) createFileAndWriteHeader(fileName, sc);
+        writeEntryDataToFile(fileName, entryData, sc);
     }
     p_logEntryDone = 1;
 
-    if (positionClosed) {
-        p_logEntryDone = 0;
-    }
+    if (positionClosed) p_logEntryDone = 0;
 }
 
 class Params {

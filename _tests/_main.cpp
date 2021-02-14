@@ -24,6 +24,7 @@ void createFileAndWriteHeader(const char* fileName) {
     if (outFile.is_open()) {
         outFile << header << '\n';
     }
+    outFile.close();
 }
 
 bool fileIsEmpty(const char* fileName) {
