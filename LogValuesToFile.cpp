@@ -50,7 +50,7 @@ void writeEntryDataToFile(const char *fileName, SCString &stringToLog, SCStudyIn
     std::ofstream outFile;
     outFile.open(fileName, std::ofstream::app);
     if (outFile.is_open()) {
-        std::string data {stringToLog};
+        std::string data{stringToLog};
         outFile << data << '\n';
     } else {
         sc.AddMessageToLog("Error writing into file", 1);
