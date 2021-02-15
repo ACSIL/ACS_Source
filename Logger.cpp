@@ -1,3 +1,6 @@
+// Logger study responsible for writing entry details to csv file.
+// Besides basic infor as entry price, qty, market, it also logs some basic market stats [ATR, Volume, Cum.Delta] and these can be extended.
+// The point is to use this study with every trading system, colect the data and run some data-analysis on them
 
 #include "Logger.h"
 
@@ -22,9 +25,18 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
         return;
     }
 
+    s_SCPositionData position;
+    sc.GetTradePosition(position);
+
+    SCFloatArray volume;
+    SCFloatArray atr;
+    SCFloatArray cumDelta;
+    sc.GetStudyArrayFromChartUsingID(sc.Input[1].GetChartNumber(), sc.Input[1].GetStudyID(), sc.Input[1].GetSubgraphIndex(), volume);
+    sc.GetStudyArrayFromChartUsingID(sc.Input[2].GetChartNumber(), sc.Input[2].GetStudyID(), sc.Input[2].GetSubgraphIndex(), atr);
+    sc.GetStudyArrayFromChartUsingID(sc.Input[3].GetChartNumber(), sc.Input[3].GetStudyID(), sc.Input[3].GetSubgraphIndex(), cumDelta);
+
     Logger* p_Logger = (Logger*)sc.GetPersistentPointer(1);
 
-    // do cleanup
     if (sc.LastCallToFunction) {
         if (p_Logger != NULL) {
             delete p_Logger;
@@ -32,14 +44,8 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
         }
         return;
     }
+    if (p_Logger == NULL) p_Logger = (Logger*)new Logger("myLoggerFile.csv");  // via input
 
-    // create the object on heap
-    if (p_Logger == NULL) {
-        p_Logger = (Logger*)new Logger("myLoggerFile.txt");
-    }
-
-    std::string header {};
-    p_Logger->setHeader("ahoj, tady je muj pes");
-    std::string header = p_Logger->getHeader();
-    sc.AddMessageToLog(header.c_str(), 1);
+    p_Logger->setHeader("datetime, price, symbol, qty, volume, atr, delta");  // via input
+    p_Logger->writeEntryDetailsToFileAfterOpeningNewTrade(sc, position, volume, atr, cumDelta);
 }
