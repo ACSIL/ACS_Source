@@ -51,6 +51,47 @@ SCSFExport scsf_GetValuesFromAnotherCharts(SCStudyInterfaceRef sc) {
     sc.UseTool(sl);
 }
 
+SCSFExport scsf_DynamicAllocationCustomClass(SCStudyInterfaceRef sc) {
+    if (sc.SetDefaults) {
+        // Set the configuration and defaults
+
+        sc.GraphName = "Dynamic Memory Allocation Example (new/delete)";
+
+        sc.AutoLoop = 1;
+
+        return;
+    }
+
+    //Example class
+    class ClassA {
+       public:
+    };
+
+    // Do data processing
+    ClassA *p_ClassA = (ClassA *)sc.GetPersistentPointer(1);
+
+    if (sc.LastCallToFunction) {
+        if (p_ClassA != NULL) {
+            delete p_ClassA;
+            sc.SetPersistentPointer(1, NULL);
+        }
+        return;
+    }
+
+    if (p_ClassA == NULL) {
+        //Allocate one instance of the class
+        p_ClassA = (ClassA *)new ClassA;
+
+        if (p_ClassA != NULL)
+            sc.SetPersistentPointer(1, p_ClassA);
+        else
+            return;
+    }
+
+    int x = p_ClassA->IntegerVariable;
+    sc.AddMessageToLog(x, 1);
+}
+
 SCSFExport scsf_LargeTextDisplayForStudyFromChart(SCStudyInterfaceRef sc) {
     SCSubgraphRef Subgraph_TextDisplay = sc.Subgraph[0];
 

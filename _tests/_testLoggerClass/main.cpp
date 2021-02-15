@@ -1,10 +1,15 @@
 #include <iostream>
 
-#include "Logger.h"
+#include "Logger.hpp"
 
 int main() {
     Logger logger("myFillle.txt");
-    logger.setHeader("sds,sdsa,dsasasa,sfsaf,fsfsaf");
-    logger.writeToFile();
+    logger.setHeader("ahoj, tady, je, muj, pes");
+    
+    std::string header = logger.getHeader();
+
+    std::cout << header;
+
+
     return 0;
 }

@@ -9,12 +9,13 @@ class Logger {
     // ~Logger();
 
     void setHeader(const std::string &fileHeader);
+    std::string getHeader();
     void writeToFile();
     void writeToMessageLog();
 
    private:
     std::string fileName;
-    std::string fileHeader; // setter nebo konstruktor
+    std::string fileHeader;  // setter nebo konstruktor
 
     bool fileExists();
     bool fileIsEmpty();
@@ -22,13 +23,16 @@ class Logger {
     void writeEntryData();
 };
 
-
 inline Logger::Logger(const std::string &fileName) {
     this->fileName = fileName;
 }
 
-inline void Logger::setHeader(const std::string &fileHeader){
+inline void Logger::setHeader(const std::string &fileHeader) {
     this->fileHeader = fileHeader;
+}
+
+inline std::string Logger::getHeader(){
+    return fileHeader;
 }
 
 inline void Logger::writeToFile() {
@@ -59,7 +63,7 @@ inline void Logger::writeHeader() {
     outFile.close();
 }
 
-inline void Logger::writeEntryData(){
+inline void Logger::writeEntryData() {
     std::ofstream outFile;
     outFile.open(fileName, std::ofstream::app);
     if (outFile.is_open()) {
@@ -72,4 +76,3 @@ inline void Logger::writeEntryData(){
         outFile.close();
     }
 }
-
