@@ -41,7 +41,7 @@ inline void Logger::writeToFile() {
 }
 
 inline void Logger::writeToMessageLog() {
-    return;
+    return
 }
 
 inline bool Logger::fileIsEmpty() {

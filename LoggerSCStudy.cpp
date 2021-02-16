@@ -2,17 +2,24 @@
 // Besides basic infor as entry price, qty, market, it also logs some basic market stats [ATR, Volume, Cum.Delta] and these can be extended.
 // The point is to use this study with every trading system, colect the data and run some data-analysis on them
 
-#include "Logger.h"
-
 #include <fstream>
 #include <string>
 
+#include "Logger.h"
 #include "sierrachart.h"
 
 SCDLLName("Logger");
 
 SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
+    SCInputRef messageLogAllowed = sc.Input[10];
+    SCInputRef fileLogAllowed = sc.Input[11];
+
     if (sc.SetDefaults) {
+        messageLogAllowed.Name = "Log to SC message log";
+        messageLogAllowed.SetYesNo(0);
+        fileLogAllowed.Name = "Log to external file";
+        fileLogAllowed.SetYesNo(1);
+
         sc.Input[1].Name = "Volume";
         sc.Input[1].SetChartStudySubgraphValues(0, 0, 0);
         sc.Input[2].Name = "ATR";
@@ -27,6 +34,8 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
 
     s_SCPositionData position;
     sc.GetTradePosition(position);
+
+    SCString str{std::to_string(position.LastTradeProfitLoss).c_str()};
 
     SCFloatArray volume;
     SCFloatArray atr;
@@ -46,6 +55,12 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
     }
     if (p_Logger == NULL) p_Logger = (Logger*)new Logger("myLoggerFile.csv");  // via input
 
-    p_Logger->setHeader("datetime, price, symbol, qty, volume, atr, delta");  // via input
-    p_Logger->writeEntryDetailsToFileAfterOpeningNewTrade(sc, position, volume, atr, cumDelta);
+    if (fileLogAllowed.GetBoolean() == 1) {
+        p_Logger->setHeader("datetime, price, symbol, qty, volume, atr, delta");  // via input
+        p_Logger->writeEntryDataToFile(sc, position, volume, atr, cumDelta);
+    }
+
+    if (messageLogAllowed.GetBoolean() == 1) {
+        p_Logger->writeEntryDataToMessageLog(sc, position, volume, atr, cumDelta);
+    }
 }
