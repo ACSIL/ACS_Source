@@ -1,15 +1,15 @@
 #include <iostream>
+#include <string>
+#include <string>
 
-#include "Logger.hpp"
+void splitString() {
+    std::string s = "ESDF[5] 60m #2";
+    std::cout << s.substr(0, s.rfind(' '));
+}
+
 
 int main() {
-    Logger logger("myFillle.txt");
-    logger.setHeader("ahoj, tady, je, muj, pes");
-    
-    std::string header = logger.getHeader();
-
-    std::cout << header;
-
+    splitString();
 
     return 0;
 }

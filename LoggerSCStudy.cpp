@@ -31,6 +31,18 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
         sc.GraphName = "Logger";
         return;
     }
+    Logger* p_Logger = (Logger*)sc.GetPersistentPointer(1);
+
+    if (sc.LastCallToFunction) {
+        if (p_Logger != NULL) {
+            delete p_Logger;
+            sc.SetPersistentPointer(1, NULL);
+        }
+        return;
+    }
+
+    if (p_Logger == NULL)
+        p_Logger = (Logger*)new Logger(sc);
 
     s_SCPositionData position;
     sc.GetTradePosition(position);
@@ -43,17 +55,6 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
     sc.GetStudyArrayFromChartUsingID(sc.Input[1].GetChartNumber(), sc.Input[1].GetStudyID(), sc.Input[1].GetSubgraphIndex(), volume);
     sc.GetStudyArrayFromChartUsingID(sc.Input[2].GetChartNumber(), sc.Input[2].GetStudyID(), sc.Input[2].GetSubgraphIndex(), atr);
     sc.GetStudyArrayFromChartUsingID(sc.Input[3].GetChartNumber(), sc.Input[3].GetStudyID(), sc.Input[3].GetSubgraphIndex(), cumDelta);
-
-    Logger* p_Logger = (Logger*)sc.GetPersistentPointer(1);
-
-    if (sc.LastCallToFunction) {
-        if (p_Logger != NULL) {
-            delete p_Logger;
-            sc.SetPersistentPointer(1, NULL);
-        }
-        return;
-    }
-    if (p_Logger == NULL) p_Logger = (Logger*)new Logger("myLoggerFile.csv");  // via input
 
     if (fileLogAllowed.GetBoolean() == 1) {
         p_Logger->setHeader("datetime, price, symbol, qty, volume, atr, delta");  // via input

@@ -7,11 +7,12 @@
 
 class Logger {
    public:
-    Logger(const std::string &fileName);
+    Logger(SCStudyInterfaceRef &sc);
 
-    void setHeader(const std::string &fileHeader);
+    void setHeader(const SCString &fileHeader);
     void writeEntryDataToFile(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &volume, SCFloatArray &atr, SCFloatArray &cumDelta);
     void writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &volume, SCFloatArray &atr, SCFloatArray &cumDelta);
+    std::string getFileName();
 
    private:
     std::string fileName;
@@ -24,12 +25,19 @@ class Logger {
     void writeProfitLoss(SCStudyInterfaceRef &sc, s_SCPositionData &position);
 };
 
-inline Logger::Logger(const std::string &fileName) {
-    this->fileName = fileName;
+inline Logger::Logger(SCStudyInterfaceRef &sc) {
+    SCString chartName = sc.GetChartName(sc.ChartNumber);
+    int index = chartName.LastIndexOf(' ', chartName.GetLength());
+    SCString name = chartName.GetSubString(index - 1, 0);
+    fileName = name += ".csv";
 }
 
-inline void Logger::setHeader(const std::string &fileHeader) {
+inline void Logger::setHeader(const SCString &fileHeader) {
     this->fileHeader = fileHeader;
+}
+
+inline std::string Logger::getFileName() {
+    return fileName;
 }
 
 // refactor - not so much params
@@ -59,9 +67,9 @@ inline void Logger::writeEntryDataToFile(SCStudyInterfaceRef &sc, s_SCPositionDa
         atrOnPrevBar,
         cumDeltaOnPrevBar);
 
-    int &p_logEntryDone = sc.GetPersistentInt(2);      // 0
-    int &p_logExitDone = sc.GetPersistentInt(3);       // 0
-    int &p_previousPosition = sc.GetPersistentInt(4);  // 0
+    int &p_logEntryDone = sc.GetPersistentInt(-1);      // 0
+    int &p_logExitDone = sc.GetPersistentInt(-2);       // 0
+    int &p_previousPosition = sc.GetPersistentInt(-3);  // 0
 
     bool positionOpened = p_previousPosition == 0 && position.PositionQuantity != 0;
     bool positionClosed = position.PositionQuantity == 0;
@@ -121,7 +129,7 @@ inline void Logger::writeHeader() {
     std::ofstream outFile;
     outFile.open(fileName, std::ofstream::app);
     if (outFile.is_open()) {
-        outFile << fileHeader << '\n';
+        outFile << fileHeader << std::endl;
     }
     outFile.close();
 }
@@ -134,7 +142,7 @@ inline void Logger::writeEntryData(SCStudyInterfaceRef &sc, SCString &stringToLo
         outFile << data;
         outFile.close();
     } else {
-        sc.AddMessageToLog("Error writing into file", 1);
+        sc.AddMessageToLog("Error writing Data into file", 1);
     }
 }
 
@@ -143,9 +151,11 @@ inline void Logger::writeProfitLoss(SCStudyInterfaceRef &sc, s_SCPositionData &p
     double profitLoss = position.LastTradeProfitLoss;
     outFile.open(fileName, std::ofstream::app);
     if (outFile.is_open()) {
-        outFile << ", " << profitLoss << '\n';
+        outFile << ", " << profitLoss << std::endl;
         outFile.close();
     } else {
-        sc.AddMessageToLog("Error writing into file", 1);
+        // flush the buffer kdyz studii sundam
+
+        sc.AddMessageToLog("Error writing PL into file", 1);
     }
 }
