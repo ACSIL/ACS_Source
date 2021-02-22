@@ -56,11 +56,12 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
     if (p_Logger == NULL) p_Logger = (Logger*)new Logger("myLoggerFile.csv");  // via input
 
     if (fileLogAllowed.GetBoolean() == 1) {
-        p_Logger->setHeader("datetime, price, symbol, qty, volume, atr, delta");  // via input
+        p_Logger->setHeader("datetime, price, qty, volume, atr, delta");  // via input
         p_Logger->writeEntryDataToFile(sc, position, volume, atr, cumDelta);
     }
 
     if (messageLogAllowed.GetBoolean() == 1) {
         p_Logger->writeEntryDataToMessageLog(sc, position, volume, atr, cumDelta);
     }
+
 }

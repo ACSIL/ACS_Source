@@ -46,14 +46,14 @@ inline void Logger::writeEntryDataToFile(SCStudyInterfaceRef &sc, s_SCPositionDa
     stringToLog.Format(
         "%i-%i-%i %0.2i:%0.2i:%0.2i,"
         "%3.2f,"
-        "%s,"
+        // "%s,"
         "%3.0f,"
         "%.02f,"
         "%.02f,"
         "%.02f,",
         year, month, day, hour, minute, second,
         position.AveragePrice,
-        position.Symbol,
+        // position.Symbol,
         position.PositionQuantity,
         volumeOnPrevBar,
         atrOnPrevBar,
