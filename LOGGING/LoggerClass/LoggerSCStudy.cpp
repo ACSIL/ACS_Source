@@ -57,11 +57,12 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
     sc.GetStudyArrayFromChartUsingID(sc.Input[3].GetChartNumber(), sc.Input[3].GetStudyID(), sc.Input[3].GetSubgraphIndex(), cumDelta);
 
     if (fileLogAllowed.GetBoolean() == 1) {
-        p_Logger->setHeader("datetime, price, symbol, qty, volume, atr, delta");  // via input
+        p_Logger->setHeader("datetime, price, qty, volume, atr, delta");  // via input
         p_Logger->writeEntryDataToFile(sc, position, volume, atr, cumDelta);
     }
 
     if (messageLogAllowed.GetBoolean() == 1) {
         p_Logger->writeEntryDataToMessageLog(sc, position, volume, atr, cumDelta);
     }
+
 }

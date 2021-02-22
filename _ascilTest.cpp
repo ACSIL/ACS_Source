@@ -1,23 +1,63 @@
+#include <string>
+
 #include "sierrachart.h"
+#include "utils.h"
 
-SCDLLName("Test")
+SCDLLName("Test");
 
-    SCSFExport scsf_ColorBarAbovePriceLimit(SCStudyInterfaceRef sc) {
+SCSFExport scsf_ColorBarsAbovePrice(SCStudyInterfaceRef sc) {
     SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
     if (sc.SetDefaults) {
-        sc.GraphName = "Color Bar";
+        sc.GraphName = "Color bars above price limit";
         sc.GraphRegion = 0;
         Subgraph_IB.Name = "IB";
         Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
-        Subgraph_IB.PrimaryColor = RGB(255, 128, 0);
+        Subgraph_IB.PrimaryColor = RGB(0, 0, 255);
         sc.AutoLoop = 1;
         return;
     }
-    SCFloatArrayRef High = sc.High;
-    SCFloatArrayRef Low = sc.Low;
+    if (sc.Low[sc.Index] > 3870) {
+        Subgraph_IB[sc.Index] = sc.Index;
+    }
+}
 
-    if (High[sc.Index] > 3850)
-        Subgraph_IB[sc.Index] = High[sc.Index];
+SCSFExport scsf_ColorFirstBarOfTradignDay(SCStudyInterfaceRef sc) {
+    SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
+    if (sc.SetDefaults) {
+        sc.GraphName = "Color First Bar of Trading Day";
+        sc.GraphRegion = 0;
+        Subgraph_IB.Name = "IB";
+        Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
+        Subgraph_IB.PrimaryColor = RGB(255, 255, 255);
+        sc.AutoLoop = 1;
+        return;
+    }
+    SCDateTime TradingDayStartDateTime = sc.GetTradingDayStartDateTimeOfBar(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
+    SCString dateTime = sc.FormatDateTime(TradingDayStartDateTime).GetChars();
+    auto StartIndex = sc.GetFirstIndexForDate(sc.ChartNumber, TradingDayStartDateTime.GetDate());
+
+    sc.AddMessageToLog(std::to_string(StartIndex).c_str(), 1);
+
+    Subgraph_IB[StartIndex] = StartIndex;
+}
+
+SCSFExport scsf_LogUtilsTest(SCStudyInterfaceRef sc) {
+    SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
+    if (sc.SetDefaults) {
+        sc.GraphName = "Log Utils Test";
+        sc.GraphRegion = 0;
+        Subgraph_IB.Name = "IB";
+        Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
+        Subgraph_IB.PrimaryColor = RGB(255, 255, 255);
+        sc.AutoLoop = 1;
+        return;
+    }
+
+    SCDateTime TradingDayStartDateTime = sc.GetTradingDayStartDateTimeOfBar(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
+
+    utils::Logger::log(sc, TradingDayStartDateTime);
+    //     utils::Logger::log(sc, "asdsd");
+    utils::Logger::log(sc, 3.23);
 }
 
 SCSFExport scsf_GetValuesFromAnotherCharts(SCStudyInterfaceRef sc) {
@@ -49,47 +89,6 @@ SCSFExport scsf_GetValuesFromAnotherCharts(SCStudyInterfaceRef sc) {
     sl.BeginDateTime = 1;
     sl.BeginValue = 70;
     sc.UseTool(sl);
-}
-
-SCSFExport scsf_DynamicAllocationCustomClass(SCStudyInterfaceRef sc) {
-    if (sc.SetDefaults) {
-        // Set the configuration and defaults
-
-        sc.GraphName = "Dynamic Memory Allocation Example (new/delete)";
-
-        sc.AutoLoop = 1;
-
-        return;
-    }
-
-    //Example class
-    class ClassA {
-       public:
-    };
-
-    // Do data processing
-    ClassA *p_ClassA = (ClassA *)sc.GetPersistentPointer(1);
-
-    if (sc.LastCallToFunction) {
-        if (p_ClassA != NULL) {
-            delete p_ClassA;
-            sc.SetPersistentPointer(1, NULL);
-        }
-        return;
-    }
-
-    if (p_ClassA == NULL) {
-        //Allocate one instance of the class
-        p_ClassA = (ClassA *)new ClassA;
-
-        if (p_ClassA != NULL)
-            sc.SetPersistentPointer(1, p_ClassA);
-        else
-            return;
-    }
-
-    int x = p_ClassA->IntegerVariable;
-    sc.AddMessageToLog(x, 1);
 }
 
 SCSFExport scsf_LargeTextDisplayForStudyFromChart(SCStudyInterfaceRef sc) {

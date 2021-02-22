@@ -2,8 +2,9 @@
 // shows the entry bar colored in green/red based on the direction
 // idea - use it on range bars -> pt/sl is the range bar..
 
-#include "sierrachart.h"
+#include <string>
 
+#include "sierrachart.h"
 SCDLLName("Simple Trend Pattern");
 
 void setInputs(SCInputRef &inputStartTradingAt, SCInputRef &inputStopTradingAt, SCInputRef &inputFlatPostionAt) {
@@ -44,7 +45,7 @@ void logMsg(SCStudyInterfaceRef &sc, s_SCNewOrder &order) {
     sc.AddMessageToLog(internalOrderIDNumberString, 0);
 }
 
-void takeLong(SCStudyInterfaceRef sc, SCSubgraphRef &subgraphUpTrend, bool areTradingHours) {
+void takeLong(SCStudyInterfaceRef sc, SCSubgraphRef &subgraphUpTrend, bool areTradingHours, bool isTimeToFlat) {
     s_SCPositionData currentPosition;
     sc.GetTradePosition(currentPosition);
     s_SCNewOrder order;
@@ -64,12 +65,14 @@ void takeLong(SCStudyInterfaceRef sc, SCSubgraphRef &subgraphUpTrend, bool areTr
     if (areTradingHours && hasThreeConsecutiveHigherHighs && hasThreeConsecutiveHigherLows & currentBarHasClosed) {
         subgraphUpTrend[sc.Index] = sc.Close[sc.Index];
         orderSuccesCheck = (int)sc.BuyEntry(order);
-        // logMsg(sc, order);
+    }
+
+    if (isTimeToFlat) {
+        sc.FlattenPosition();
     }
 }
 
-
-void takeShort(SCStudyInterfaceRef &sc, SCSubgraphRef &subgraphDownTrend, bool areTradingHours) {
+void takeShort(SCStudyInterfaceRef &sc, SCSubgraphRef &subgraphDownTrend, bool areTradingHours, bool isTimeToFlat) {
     s_SCPositionData currentPosition;
     sc.GetTradePosition(currentPosition);
     s_SCNewOrder order;
@@ -90,7 +93,10 @@ void takeShort(SCStudyInterfaceRef &sc, SCSubgraphRef &subgraphDownTrend, bool a
     if (areTradingHours & hasThreeConsecutiveLowerHighs && hasThreeConsecutiveLowerLows & currentBarHasClosed) {
         subgraphDownTrend[sc.Index] = sc.Close[sc.Index];
         orderSuccesCheck = (int)sc.SellEntry(order);
-        // logMsg(sc, order);
+    }
+
+    if (isTimeToFlat) {
+        sc.FlattenPosition();
     }
 }
 
@@ -113,9 +119,14 @@ SCSFExport scsf_SimpleTrendPattern(SCStudyInterfaceRef sc) {
         return;
     }
 
+    sc.MovingAverage(sc.BaseDataIn[SC_LAST], sc.Subgraph[0], MOVAVGTYPE_EXPONENTIAL, 7);
+    float movingAvgAtCurBar = sc.Subgraph[0][sc.Index];
+
+    sc.AddMessageToLog(std::to_string(movingAvgAtCurBar).c_str(), 1);
+
     bool areTradingHours = sc.BaseDateTimeIn[sc.Index].GetTime() > inputStartTradingAt.GetTime() && sc.BaseDateTimeIn[sc.Index].GetTime() < inputStopTradingAt.GetTime();
     bool isTimeToFlat = sc.BaseDateTimeIn[sc.Index].GetTime() >= inputFlatPostionAt.GetTime();
 
-    takeLong(sc, subgraphUpTrend, areTradingHours);
-    takeShort(sc, subgraphDownTrend, areTradingHours);
+    // takeLong(sc, subgraphUpTrend, areTradingHours, isTimeToFlat);
+    // takeShort(sc, subgraphDownTrend, areTradingHours, isTimeToFlat);
 }
