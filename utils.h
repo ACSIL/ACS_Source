@@ -23,8 +23,15 @@ class Logger {
     }
 };
 
+class DateTime {
+   public:
+    static int getFirstIndexOfSession(SCStudyInterfaceRef& sc) {
+        SCDateTime tradingDayStartDateTime = sc.GetTradingDayStartDateTimeOfBar(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
+        SCString dateTime = sc.FormatDateTime(tradingDayStartDateTime).GetChars();
+        Logger::log(sc, dateTime, "ddateTimee");
+        int startIndex = sc.GetFirstIndexForDate(sc.ChartNumber, tradingDayStartDateTime.GetDate());
+        return startIndex;
+    }
+};
 
-
-
-
-}
+}  // namespace utils

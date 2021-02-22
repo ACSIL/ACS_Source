@@ -16,8 +16,16 @@ SCSFExport scsf_ColorBarsAbovePrice(SCStudyInterfaceRef sc) {
         sc.AutoLoop = 1;
         return;
     }
-    if (sc.Low[sc.Index] > 3870) {
-        Subgraph_IB[sc.Index] = sc.Index;
+
+    int startIndex = utils::DateTime::getFirstIndexOfSession(sc);
+
+    utils::Logger::log(sc, startIndex, "starting index");
+    utils::Logger::log(sc, sc.Index, "sc.Index index");
+    utils::Logger::log(sc, sc.IndexOfFirstVisibleBar, "sc.FirstVisible index");
+    utils::Logger::log(sc, sc.IndexOfLastVisibleBar, "sc.LastVisible index");
+
+    if (sc.Index > startIndex) {
+        Subgraph_IB[sc.Index] = startIndex;
     }
 }
 
