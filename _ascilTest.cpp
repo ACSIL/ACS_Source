@@ -176,7 +176,10 @@ SCSFExport scsf_DrawTextToChart(SCStudyInterfaceRef sc) {
         sc.GraphRegion = 0;
     }
 
-    util::Display::displayText(sc, "testing..", 5, 85);
+    util::Display::display(sc, "testing..", 10, 90, "string");
+    util::Display::display(sc, 1111, 10, 88, "int");
+    util::Display::display(sc, 3.2124, 10, 86, "double");
+    
 }
 
 SCSFExport scsf_LargeTextDisplayForStudyFromChart(SCStudyInterfaceRef sc) {

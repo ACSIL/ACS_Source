@@ -25,27 +25,24 @@ class Logger {
 
 class Display {
    public:
-    static void displayText(SCStudyInterfaceRef& sc, const SCString& textToDisplay, int horizontalPosition, int verticalPosition, SCString description = "") {
-        int& r_DrawingTextLineNumber = *static_cast<int*>(sc.StorageBlock);
+    static void display(SCStudyInterfaceRef& sc, const SCString& value, int xCoordinate, int yCoordinate, SCString description = "") {
+        int uniqueID = xCoordinate + yCoordinate;
+        int& p_DrawingTextLineNumber = sc.GetPersistentInt(11110000 + uniqueID);
 
         if (sc.LastCallToFunction) {
-            // If the Chartbook is being closed, the Chartbook will have already been saved first by the time we enter this block.  So this particular chart drawing if it exists, will have already been saved.
-            if (r_DrawingTextLineNumber != 0 && sc.UserDrawnChartDrawingExists(sc.ChartNumber, r_DrawingTextLineNumber) > 0) {
-                // be sure to delete user drawn type drawing when study removed
-                sc.DeleteUserDrawnACSDrawing(sc.ChartNumber, r_DrawingTextLineNumber);
+            if (p_DrawingTextLineNumber != 0 && sc.UserDrawnChartDrawingExists(sc.ChartNumber, p_DrawingTextLineNumber) > 0) {
+                sc.DeleteUserDrawnACSDrawing(sc.ChartNumber, p_DrawingTextLineNumber);
             }
-
             return;
         }
 
-        //Reset the line number if the drawing no longer exists.
-        if (r_DrawingTextLineNumber != 0 && sc.UserDrawnChartDrawingExists(sc.ChartNumber, r_DrawingTextLineNumber) == 0) {
-            r_DrawingTextLineNumber = 0;
+        if (p_DrawingTextLineNumber != 0 && sc.UserDrawnChartDrawingExists(sc.ChartNumber, p_DrawingTextLineNumber) == 0) {
+            p_DrawingTextLineNumber = 0;
         }
 
-        if (sc.HideStudy && r_DrawingTextLineNumber != 0) {
-            sc.DeleteUserDrawnACSDrawing(sc.ChartNumber, r_DrawingTextLineNumber);
-            r_DrawingTextLineNumber = 0;
+        if (sc.HideStudy && p_DrawingTextLineNumber != 0) {
+            sc.DeleteUserDrawnACSDrawing(sc.ChartNumber, p_DrawingTextLineNumber);
+            p_DrawingTextLineNumber = 0;
         }
 
         if (sc.HideStudy)
@@ -54,7 +51,7 @@ class Display {
         SCString text;
         text += description;
         text += " ";
-        text += textToDisplay;
+        text += value;
 
         s_UseTool t;
         t.ChartNumber = sc.ChartNumber;
@@ -67,26 +64,24 @@ class Display {
         t.Color = RGB(255, 255, 255);
         t.Region = 0;
         t.Text = text;
-        t.BeginDateTime = horizontalPosition;
-        t.BeginValue = verticalPosition;
+        t.LineNumber = uniqueID;
+        t.BeginDateTime = xCoordinate;
+        t.BeginValue = yCoordinate;
         t.AddAsUserDrawnDrawing = true;
 
-        if (r_DrawingTextLineNumber != 0)
-            t.LineNumber = r_DrawingTextLineNumber;
+        if (p_DrawingTextLineNumber != 0)
+            t.LineNumber = p_DrawingTextLineNumber;
 
         if (sc.UseTool(t) > 0)
-            r_DrawingTextLineNumber = t.LineNumber;
+            p_DrawingTextLineNumber = t.LineNumber;
     }
 
-    static void displayNumber(SCStudyInterfaceRef& sc, const int& value, int horizontalPosition, int verticalPosition, SCString description = "") {
-        int& p_DrawingTextLineNumber = sc.GetPersistentInt(11110000);
+    static void display(SCStudyInterfaceRef& sc, const int& value, int xCoordinate, int yCoordinate, SCString description = "") {
+        int uniqueID = xCoordinate + yCoordinate;
+        int& p_DrawingTextLineNumber = sc.GetPersistentInt(11110000 + uniqueID);
 
         if (sc.LastCallToFunction) {
-            // If the Chartbook is being closed, the Chartbook
-            //will have already been saved first by the time we enter this block.
-            //So this particular chart drawing if it exists, will have already been saved.
             if (p_DrawingTextLineNumber != 0 && sc.UserDrawnChartDrawingExists(sc.ChartNumber, p_DrawingTextLineNumber) > 0) {
-                // be sure to delete user drawn type drawing when study removed
                 sc.DeleteUserDrawnACSDrawing(sc.ChartNumber, p_DrawingTextLineNumber);
             }
             return;
@@ -121,9 +116,10 @@ class Display {
         t.Color = RGB(255, 255, 255);
         t.Region = 0;
         t.Text = text;
-        t.LineNumber = horizontalPosition + verticalPosition;  // to make it unique for each instance in a chart
-        t.BeginDateTime = horizontalPosition;
-        t.BeginValue = verticalPosition;
+        t.LineNumber = uniqueID;
+        t.BeginDateTime = xCoordinate;
+        t.BeginValue = yCoordinate;
+        t.AddAsUserDrawnDrawing = true;
         sc.UseTool(t);
 
         if (p_DrawingTextLineNumber != 0)
@@ -133,27 +129,77 @@ class Display {
             p_DrawingTextLineNumber = t.LineNumber;
     }
 
-    static void display(SCStudyInterfaceRef& sc, int horizontalPosition, int verticalPosition, const int& value, int DrawAboveMainPriceGraph, SCString description = "") {
-        int& r_DrawingTextLineNumber = *static_cast<int*>(sc.StorageBlock);
+    static void display(SCStudyInterfaceRef& sc, const double& value, int xCoordinate, int yCoordinate, SCString description = "") {
+        int uniqueID = xCoordinate + yCoordinate;
+        int& p_DrawingTextLineNumber = sc.GetPersistentInt(11110000 + uniqueID);
 
         if (sc.LastCallToFunction) {
-            // If the Chartbook is being closed, the Chartbook
-            //will have already been saved first by the time we enter this block.
-            //So this particular chart drawing if it exists, will have already been saved.
-            if (r_DrawingTextLineNumber != 0 && sc.UserDrawnChartDrawingExists(sc.ChartNumber, r_DrawingTextLineNumber) > 0) {
-                // be sure to delete user drawn type drawing when study removed
-                sc.DeleteUserDrawnACSDrawing(sc.ChartNumber, r_DrawingTextLineNumber);
+            if (p_DrawingTextLineNumber != 0 && sc.UserDrawnChartDrawingExists(sc.ChartNumber, p_DrawingTextLineNumber) > 0) {
+                sc.DeleteUserDrawnACSDrawing(sc.ChartNumber, p_DrawingTextLineNumber);
             }
             return;
         }
 
-        if (r_DrawingTextLineNumber != 0 && sc.UserDrawnChartDrawingExists(sc.ChartNumber, r_DrawingTextLineNumber) == 0) {
-            r_DrawingTextLineNumber = 0;
+        if (p_DrawingTextLineNumber != 0 && sc.UserDrawnChartDrawingExists(sc.ChartNumber, p_DrawingTextLineNumber) == 0) {
+            p_DrawingTextLineNumber = 0;
         }
 
-        if (sc.HideStudy && r_DrawingTextLineNumber != 0) {
-            sc.DeleteUserDrawnACSDrawing(sc.ChartNumber, r_DrawingTextLineNumber);
-            r_DrawingTextLineNumber = 0;
+        if (sc.HideStudy && p_DrawingTextLineNumber != 0) {
+            sc.DeleteUserDrawnACSDrawing(sc.ChartNumber, p_DrawingTextLineNumber);
+            p_DrawingTextLineNumber = 0;
+        }
+
+        if (sc.HideStudy)
+            return;
+
+
+        SCString text;
+        SCString strValue = std::to_string(value).c_str();
+        text += description;
+        text += " ";
+        text += strValue;
+
+        s_UseTool t;
+        t.ChartNumber = sc.ChartNumber;
+        t.DrawingType = DRAWING_TEXT;
+        t.FontBackColor = RGB(0, 0, 0);
+        t.FontSize = 10;
+        t.FontBold = false;
+        t.AddMethod = UTAM_ADD_OR_ADJUST;
+        t.UseRelativeVerticalValues = 1;
+        t.Color = RGB(255, 255, 255);
+        t.Region = 0;
+        t.Text = text;
+        t.LineNumber = uniqueID;
+        t.BeginDateTime = xCoordinate;
+        t.BeginValue = yCoordinate;
+        t.AddAsUserDrawnDrawing = true;
+        sc.UseTool(t);
+
+        if (p_DrawingTextLineNumber != 0)
+            t.LineNumber = p_DrawingTextLineNumber;
+
+        if (sc.UseTool(t) > 0)
+            p_DrawingTextLineNumber = t.LineNumber;
+    }
+
+    static void display(SCStudyInterfaceRef& sc, int xCoordinate, int yCoordinate, const int& value, int DrawAboveMainPriceGraph, SCString description = "") {
+        int& p_DrawingTextLineNumber = *static_cast<int*>(sc.StorageBlock);
+
+        if (sc.LastCallToFunction) {
+            if (p_DrawingTextLineNumber != 0 && sc.UserDrawnChartDrawingExists(sc.ChartNumber, p_DrawingTextLineNumber) > 0) {
+                sc.DeleteUserDrawnACSDrawing(sc.ChartNumber, p_DrawingTextLineNumber);
+            }
+            return;
+        }
+
+        if (p_DrawingTextLineNumber != 0 && sc.UserDrawnChartDrawingExists(sc.ChartNumber, p_DrawingTextLineNumber) == 0) {
+            p_DrawingTextLineNumber = 0;
+        }
+
+        if (sc.HideStudy && p_DrawingTextLineNumber != 0) {
+            sc.DeleteUserDrawnACSDrawing(sc.ChartNumber, p_DrawingTextLineNumber);
+            p_DrawingTextLineNumber = 0;
         }
 
         if (sc.HideStudy)
@@ -162,8 +208,8 @@ class Display {
         SCString text;
         SCString strValue = std::to_string(value).c_str();
         text += description;
+        text += " ";
         text += strValue;
-        text += "";
 
         s_UseTool Tool;
         Tool.ChartNumber = sc.ChartNumber;
@@ -171,10 +217,10 @@ class Display {
         Tool.Region = sc.GraphRegion;
         Tool.AddMethod = UTAM_ADD_OR_ADJUST;
 
-        Tool.BeginDateTime = horizontalPosition;
+        Tool.BeginDateTime = xCoordinate;
         Tool.BeginDateTime = -3;
 
-        Tool.BeginValue = (float)verticalPosition;
+        Tool.BeginValue = (float)yCoordinate;
 
         Tool.UseRelativeVerticalValues = 1;
         Tool.Color = RGB(0, 0, 0);  //black
@@ -190,11 +236,11 @@ class Display {
 
         Tool.DrawUnderneathMainGraph = DrawAboveMainPriceGraph ? 0 : 1;
 
-        if (r_DrawingTextLineNumber != 0)
-            Tool.LineNumber = r_DrawingTextLineNumber;
+        if (p_DrawingTextLineNumber != 0)
+            Tool.LineNumber = p_DrawingTextLineNumber;
 
         if (sc.UseTool(Tool) > 0)
-            r_DrawingTextLineNumber = Tool.LineNumber;
+            p_DrawingTextLineNumber = Tool.LineNumber;
     }
 
     static void dspl(SCStudyInterfaceRef& sc, bool DisplayInFillSpace, int HorizontalPosition, int VerticalPosition, int TransparentLabelBackground, const SCString& TextToDisplay, int DrawAboveMainPriceGraph, int BoldFont = 1) {
@@ -208,19 +254,18 @@ class Display {
         Subgraph.SecondaryColorUsed = true;
         Subgraph.DisplayNameValueInWindowsFlags = 0;
 
-        int& r_DrawingTextLineNumber = sc.GetPersistentInt(11110000);
+        int& p_DrawingTextLineNumber = sc.GetPersistentInt(11110000);
 
         if (sc.IsFullRecalculation)
-            r_DrawingTextLineNumber = 0;
+            p_DrawingTextLineNumber = 0;
 
-        //Reset the line number if the drawing no longer exists.
-        if (r_DrawingTextLineNumber != 0 && sc.ChartDrawingExists(sc.ChartNumber, r_DrawingTextLineNumber) == 0) {
-            r_DrawingTextLineNumber = 0;
+        if (p_DrawingTextLineNumber != 0 && sc.ChartDrawingExists(sc.ChartNumber, p_DrawingTextLineNumber) == 0) {
+            p_DrawingTextLineNumber = 0;
         }
 
-        if (sc.HideStudy && r_DrawingTextLineNumber != 0) {
-            sc.DeleteACSChartDrawing(sc.ChartNumber, TOOL_DELETE_CHARTDRAWING, r_DrawingTextLineNumber);
-            r_DrawingTextLineNumber = 0;
+        if (sc.HideStudy && p_DrawingTextLineNumber != 0) {
+            sc.DeleteACSChartDrawing(sc.ChartNumber, TOOL_DELETE_CHARTDRAWING, p_DrawingTextLineNumber);
+            p_DrawingTextLineNumber = 0;
         }
 
         if (sc.HideStudy)
@@ -253,11 +298,11 @@ class Display {
 
         Tool.DrawUnderneathMainGraph = DrawAboveMainPriceGraph ? 0 : 1;
 
-        if (r_DrawingTextLineNumber != 0)
-            Tool.LineNumber = r_DrawingTextLineNumber;
+        if (p_DrawingTextLineNumber != 0)
+            Tool.LineNumber = p_DrawingTextLineNumber;
 
         if (sc.UseTool(Tool) > 0)
-            r_DrawingTextLineNumber = Tool.LineNumber;
+            p_DrawingTextLineNumber = Tool.LineNumber;
     }
 };
 
