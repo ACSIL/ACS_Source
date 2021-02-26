@@ -1,14 +1,13 @@
 #include <string>
 
 #include "sierrachart.h"
-#include "utils.h"
+#include "util.h"
 
 SCDLLName("Test");
 
-SCSFExport scsf_ColorBarsAbovePrice(SCStudyInterfaceRef sc) {
+SCSFExport scsf_ColorBarsFromStartOfSession(SCStudyInterfaceRef sc) {
     SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
     if (sc.SetDefaults) {
-        sc.GraphName = "Color bars above price limit";
         sc.GraphRegion = 0;
         Subgraph_IB.Name = "IB";
         Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
@@ -17,42 +16,106 @@ SCSFExport scsf_ColorBarsAbovePrice(SCStudyInterfaceRef sc) {
         return;
     }
 
-    int startIndex = utils::DateTime::getFirstIndexOfSession(sc);
+    int startIndex = util::DateTime::getFirstIndexOfSession(sc);
 
-    utils::Logger::log(sc, startIndex, "starting index");
-    utils::Logger::log(sc, sc.Index, "sc.Index index");
-    utils::Logger::log(sc, sc.IndexOfFirstVisibleBar, "sc.FirstVisible index");
-    utils::Logger::log(sc, sc.IndexOfLastVisibleBar, "sc.LastVisible index");
+    util::Logger::log(sc, startIndex, "starting index");
+    util::Logger::log(sc, sc.Index, "sc.Index index");
+    util::Logger::log(sc, sc.IndexOfFirstVisibleBar, "sc.FirstVisible index");
+    util::Logger::log(sc, sc.IndexOfLastVisibleBar, "sc.LastVisible index");
 
     if (sc.Index > startIndex) {
         Subgraph_IB[sc.Index] = startIndex;
     }
 }
 
-SCSFExport scsf_ColorFirstBarOfTradignDay(SCStudyInterfaceRef sc) {
+SCSFExport scsf_ColorFromFirstBarOfTradignDay(SCStudyInterfaceRef sc) {
     SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
     if (sc.SetDefaults) {
-        sc.GraphName = "Color First Bar of Trading Day";
         sc.GraphRegion = 0;
         Subgraph_IB.Name = "IB";
         Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
-        Subgraph_IB.PrimaryColor = RGB(255, 255, 255);
+        Subgraph_IB.PrimaryColor = RGB(0, 0, 255);
         sc.AutoLoop = 1;
         return;
     }
-    SCDateTime TradingDayStartDateTime = sc.GetTradingDayStartDateTimeOfBar(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
-    SCString dateTime = sc.FormatDateTime(TradingDayStartDateTime).GetChars();
+    SCDateTime TradingDayStartDateTime = sc.GetTradingDayStartDateTimeOfBar(sc.BaseDateTimeIn[sc.Index]);
+    SCString s = sc.FormatDateTime(TradingDayStartDateTime).GetChars();
     auto StartIndex = sc.GetFirstIndexForDate(sc.ChartNumber, TradingDayStartDateTime.GetDate());
 
-    sc.AddMessageToLog(std::to_string(StartIndex).c_str(), 1);
+    sc.AddMessageToLog(s, 1);
 
-    Subgraph_IB[StartIndex] = StartIndex;
+    if (sc.Index > StartIndex) {
+        Subgraph_IB[sc.Index] = StartIndex;
+    }
+}
+
+// SCSFExport scsf_ColorThreeHHBars(SCStudyInterfaceRef sc) {
+//     SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
+//     if (sc.SetDefaults) {
+//         sc.GraphName = "Color Three HH bars";
+//         sc.GraphRegion = 0;
+//         Subgraph_IB.Name = "IB";
+//         Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
+//         Subgraph_IB.PrimaryColor = RGB(0, 0, 255);
+//         sc.AutoLoop = 1;
+//         return;
+//     }
+
+//     if (StartIndex == sc.Index) sc.Index = 0;
+
+//     if (sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2]) {
+//         Subgraph_IB[sc.Index] = sc.Index;
+//         Subgraph_IB[sc.Index - 1] = sc.Index;
+//         Subgraph_IB[sc.Index - 2] = sc.Index;
+//     }
+// }
+
+SCSFExport scsf_TakeTradeOnThirdRisingBar(SCStudyInterfaceRef sc) {
+    SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
+    if (sc.SetDefaults) {
+        sc.GraphRegion = 0;
+        sc.AutoLoop = 1;
+
+        sc.Input[0].Name = "Start trading at: ";
+        sc.Input[0].SetTime(HMS_TIME(8, 30, 0));
+        sc.Input[1].Name = "Stop trading at: ";
+        sc.Input[1].SetTime(HMS_TIME(14, 00, 0));
+        sc.Input[2].Name = "Flat postion at: ";
+        sc.Input[2].SetTime(HMS_TIME(15, 00, 30));
+        return;
+    }
+
+    s_SCPositionData pos;
+    sc.GetTradePosition(pos);
+    s_SCNewOrder order;
+    order.OrderQuantity = 1;
+    order.OrderType = SCT_ORDERTYPE_MARKET;
+    order.Target1Offset = 10 * sc.TickSize;
+    order.Stop1Offset = 10 * sc.TickSize;
+
+    SCDateTime TradingDayStartDateTime = sc.GetTradingDayStartDateTimeOfBar(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
+    SCString s = sc.FormatDateTime(TradingDayStartDateTime).GetChars();
+    auto StartIndex = sc.GetFirstIndexForDate(sc.ChartNumber, TradingDayStartDateTime.GetDate());
+
+    bool areTradingHours = sc.BaseDateTimeIn[sc.Index].GetTime() > sc.Input[0].GetTime() && sc.BaseDateTimeIn[sc.Index].GetTime() < sc.Input[1].GetTime();
+    bool isTimeToFlat = sc.BaseDateTimeIn[sc.Index].GetTime() >= sc.Input[2].GetTime();
+
+    bool threeHigherHighs = sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2];
+
+    // ma resetovat ale nefunguje - nema brat pv potazv bary pred open..
+    if (areTradingHours) {
+        if (sc.Index >= StartIndex) {
+            if (threeHigherHighs) {
+                sc.BuyEntry(order);
+            }
+        }
+    }
+    if (isTimeToFlat) sc.FlattenPosition();
 }
 
 SCSFExport scsf_LogUtilsTest(SCStudyInterfaceRef sc) {
     SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
     if (sc.SetDefaults) {
-        sc.GraphName = "Log Utils Test";
         sc.GraphRegion = 0;
         Subgraph_IB.Name = "IB";
         Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
@@ -63,9 +126,8 @@ SCSFExport scsf_LogUtilsTest(SCStudyInterfaceRef sc) {
 
     SCDateTime TradingDayStartDateTime = sc.GetTradingDayStartDateTimeOfBar(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
 
-    utils::Logger::log(sc, TradingDayStartDateTime);
-    //     utils::Logger::log(sc, "asdsd");
-    utils::Logger::log(sc, 3.23);
+    util::Logger::log(sc, TradingDayStartDateTime);
+    util::Logger::log(sc, 3.23);
 }
 
 SCSFExport scsf_GetValuesFromAnotherCharts(SCStudyInterfaceRef sc) {
@@ -81,22 +143,40 @@ SCSFExport scsf_GetValuesFromAnotherCharts(SCStudyInterfaceRef sc) {
     sc.GetStudyArrayFromChartUsingID(Input_StudySubgraphReference.GetChartNumber(), Input_StudySubgraphReference.GetStudyID(), Input_StudySubgraphReference.GetSubgraphIndex(), StudyReference);
     float StudyValue = StudyReference[StudyReference.GetArraySize() - 1];
 
-    s_UseTool sl;
-    sl.Clear();
-    sl.ChartNumber = sc.ChartNumber;
-    sl.DrawingType = DRAWING_TEXT;
-    sl.FontBackColor = RGB(0, 0, 0);
-    sl.FontSize = 8;
-    sl.FontBold = false;
-    sl.AddMethod = UTAM_ADD_OR_ADJUST;
-    sl.UseRelativeVerticalValues = 1;
-    sl.Color = RGB(255, 255, 255);
-    sl.Region = 0;
-    sl.Text.Format("sl: %.03f", StudyValue);
-    sl.LineNumber = 20;
-    sl.BeginDateTime = 1;
-    sl.BeginValue = 70;
-    sc.UseTool(sl);
+    s_UseTool t;
+    t.Clear();
+    t.ChartNumber = sc.ChartNumber;
+    t.DrawingType = DRAWING_TEXT;
+    t.FontBackColor = RGB(0, 0, 0);
+    t.FontSize = 8;
+    t.FontBold = false;
+    t.AddMethod = UTAM_ADD_OR_ADJUST;
+    t.UseRelativeVerticalValues = 1;
+    t.Color = RGB(255, 255, 255);
+    t.Region = 0;
+    t.Text.Format("t: %.03f", StudyValue);
+    t.LineNumber = 20;
+    t.BeginDateTime = 1;
+    t.BeginValue = 70;
+    sc.UseTool(t);
+}
+
+SCSFExport scsf_CheckIfTimeInSessions(SCStudyInterfaceRef sc) {
+    int IsInDaySession = sc.IsDateTimeInDaySession(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
+    int IsInEveningSession = sc.IsDateTimeInEveningSession(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
+    int IsInSession = sc.IsDateTimeInSession(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
+
+    util::Logger::log(sc, util::DateTime::isCurrentBarInDaySession(sc), " IsInDaySession");
+    util::Logger::log(sc, util::DateTime::isCurrentBarInNightSession(sc), " IsInEveningSession");
+    util::Logger::log(sc, util::DateTime::isCurrentBarInSession(sc), " IsInSession");
+}
+
+SCSFExport scsf_DrawTextToChart(SCStudyInterfaceRef sc) {
+    if (sc.SetDefaults) {
+        sc.GraphRegion = 0;
+    }
+
+    util::Display::displayText(sc, "testing..", 5, 85);
 }
 
 SCSFExport scsf_LargeTextDisplayForStudyFromChart(SCStudyInterfaceRef sc) {
@@ -185,6 +265,8 @@ SCSFExport scsf_LargeTextDisplayForStudyFromChart(SCStudyInterfaceRef sc) {
             ValueText += " ";
     } else
         ValueText += sc.FormatGraphValue(StudyValue, sc.GetValueFormat());
+
+    // void AddAndManageSingleTextDrawingForStudy(SCStudyInterfaceRef& sc, bool DisplayInFillSpace, int HorizontalPosition, int VerticalPosition, SCSubgraphRef Subgraph, int TransparentLabelBackground, SCString& TextToDisplay, int DrawAboveMainPriceGraph, int BoldFont = 1) {
 
     sc.AddAndManageSingleTextDrawingForStudy(sc, false, Input_HorizontalPosition.GetInt(), Input_VerticalPosition.GetInt(), Subgraph_TextDisplay, false, ValueText, true);
 }

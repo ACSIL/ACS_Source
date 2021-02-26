@@ -52,11 +52,8 @@ void takeLong(SCStudyInterfaceRef sc, SCSubgraphRef &subgraphUpTrend, bool areTr
     order.OrderQuantity = 1;
     order.OrderType = SCT_ORDERTYPE_MARKET;
     order.TextTag = "Simple trend pattern";
-    order.AttachedOrderTarget1Type = SCT_ORDERTYPE_LIMIT;
-    order.AttachedOrderStopAllType = SCT_ORDERTYPE_STOP;
-    order.Target1Offset = 20 * sc.TickSize;
-    order.Stop1Offset = 20 * sc.TickSize;
-    int orderSuccesCheck = 0;
+    order.Target1Offset = 10 * sc.TickSize;
+    order.Stop1Offset = 10 * sc.TickSize;
 
     bool currentBarHasClosed = sc.GetBarHasClosedStatus() == BHCS_BAR_HAS_CLOSED;
     bool hasThreeConsecutiveHigherHighs = sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2];

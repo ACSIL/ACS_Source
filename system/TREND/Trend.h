@@ -6,6 +6,9 @@
 #include "sierrachart.h"
 
 class Trend {
+   private:
+    const int OFFSET = 3;  // pattern is formed by three candles -> looking 3 bars back
+
    public:
     bool isUp(SCStudyInterfaceRef &sc, const int &period);
     bool isDown(SCStudyInterfaceRef &sc, const int &period);
@@ -21,18 +24,19 @@ class Trend {
     bool emaAboveHighOfCurrentBar(SCStudyInterfaceRef &sc, const int &period);
     bool emaBellowLowOfCurrentBar(SCStudyInterfaceRef &sc, const int &period);
     bool barHasClosed(SCStudyInterfaceRef &sc);
+    bool areBarsInDaySession(SCStudyInterfaceRef &sc);
 };
 
 inline bool Trend::isUp(SCStudyInterfaceRef &sc, const int &period) {
-    return threeConsecutiveHigherHighs(sc) && threeConsecutiveHigherLows(sc) && emaBellowLowOfCurrentBar(sc, period);
+    return threeConsecutiveHigherHighs(sc) && threeConsecutiveHigherLows(sc) && emaBellowLowOfCurrentBar(sc, period) && areBarsInDaySession(sc);
 }
 
 inline bool Trend::isDown(SCStudyInterfaceRef &sc, const int &period) {
-    return threeConsecutiveLowerHighs(sc) && threeConsecutiveLowerLows(sc) && emaAboveHighOfCurrentBar(sc, period);
+    return threeConsecutiveLowerHighs(sc) && threeConsecutiveLowerLows(sc) && emaAboveHighOfCurrentBar(sc, period) && areBarsInDaySession(sc);
 }
 
 inline bool Trend::threeConsecutiveHigherHighs(SCStudyInterfaceRef &sc) {
-    return sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2] ;
+    return sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2];
 }
 
 inline bool Trend::threeConsecutiveHigherLows(SCStudyInterfaceRef &sc) {
@@ -71,6 +75,10 @@ inline bool Trend::emaBellowLowOfCurrentBar(SCStudyInterfaceRef &sc, const int &
     return EmaAtCurBar < sc.Low[sc.Index];
 }
 
-inline bool Trend::barHasClosed(SCStudyInterfaceRef &sc){
+inline bool Trend::barHasClosed(SCStudyInterfaceRef &sc) {
     return sc.GetBarHasClosedStatus() == BHCS_BAR_HAS_CLOSED;
+}
+
+inline bool Trend::areBarsInDaySession(SCStudyInterfaceRef &sc) {
+    return sc.IsDateTimeInDaySession(sc.BaseDateTimeIn[sc.Index - OFFSET]);
 }
