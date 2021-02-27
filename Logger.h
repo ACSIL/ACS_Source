@@ -14,7 +14,6 @@ class Logger {
 
     void writeToFile(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
     void writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
-    void setHeader(const SCString &fileHeader);
     void setFileName(const std::string &fileName);
 
    private:
@@ -23,17 +22,13 @@ class Logger {
 
     bool fileExists();
     bool fileIsEmpty();
-    void writeHeader();
+    void writeHeader(SCStudyInterfaceRef &sc);
     void writeEntryData(SCStudyInterfaceRef &sc, SCString &stringToLog);
     void writeProfitLoss(SCStudyInterfaceRef &sc, s_SCPositionData &position);
     SCString createString(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
 };
 
 inline Logger::Logger(SCStudyInterfaceRef &sc) {
-}
-
-inline void Logger::setHeader(const SCString &fileHeader) {
-    this->fileHeader = fileHeader;
 }
 
 inline void Logger::setFileName(const std::string &fileName) {
@@ -64,10 +59,10 @@ inline SCString Logger::createString(SCStudyInterfaceRef &sc, SCFloatArray &stud
         "%i-%i-%i %0.2i:%0.2i:%0.2i,"  // entry dt
         "%i-%i-%i %0.2i:%0.2i:%0.2i,"  // exit dt
         "%3.2f,"                       //entry price
-        "%3.0f,"   // qty
-        "%.02f,"   // s1
-        "%.02f,"   // s2
-        "%.02f,",  // s3
+        "%3.0f,"                       // qty
+        "%.02f,"                       // s1
+        "%.02f,"                       // s2
+        "%.02f,",                      // s3
         yearEntry, monthEntry, dayEntry, hourEntry, minuteEntry, secondEntry,
         yearExit, monthExit, dayExit, hourExit, minuteExit, secondExit,
         entryPrice,
@@ -95,7 +90,7 @@ inline void Logger::writeToFile(SCStudyInterfaceRef &sc, SCFloatArray &study01, 
     bool logExitNotDone = p_logExitDone == 0;
 
     if (positionOpened && logEntryNotDone) {
-        if (!fileExists()) writeHeader();
+        if (!fileExists()) writeHeader(sc);
         writeEntryData(sc, stringToLog);
         p_logExitDone = 0;
         p_logEntryDone = 1;
@@ -143,12 +138,23 @@ inline bool Logger::fileExists() {
     return file.good();
 }
 
-inline void Logger::writeHeader() {
+inline void Logger::writeHeader(SCStudyInterfaceRef &sc) {
     std::ofstream outFile;
+    sc.AddMessageToLog("in write header", 1);
+
+    SCString study01Name = sc.GetStudyNameFromChart(sc.Input[1].GetChartNumber(), sc.Input[1].GetStudyID());
+    SCString study02Name = sc.GetStudyNameFromChart(sc.Input[2].GetChartNumber(), sc.Input[2].GetStudyID());
+    SCString study03Name = sc.GetStudyNameFromChart(sc.Input[3].GetChartNumber(), sc.Input[3].GetStudyID());
+
+    SCString header = "entry_datetime, exit_datetime, entry_price, qty,";
+    header += study01Name.Append(",");
+    header += study02Name.Append(",");
+    header += study03Name.Append(",pl");
+
+    sc.AddMessageToLog(study01Name, 1);
+
     outFile.open(fileName, std::ofstream::app);
-    if (outFile.is_open()) {
-        outFile << fileHeader << std::endl;
-    }
+    if (outFile.is_open()) outFile << header << std::endl;
     outFile.close();
 }
 

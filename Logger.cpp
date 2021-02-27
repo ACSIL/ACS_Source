@@ -32,27 +32,25 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
         sc.GraphName = "Logger";
         return;
     }
-    
+
     SCFloatArray study01;
     SCFloatArray study02;
     SCFloatArray study03;
     sc.GetStudyArrayFromChartUsingID(sc.Input[1].GetChartNumber(), sc.Input[1].GetStudyID(), sc.Input[1].GetSubgraphIndex(), study01);
     sc.GetStudyArrayFromChartUsingID(sc.Input[2].GetChartNumber(), sc.Input[2].GetStudyID(), sc.Input[2].GetSubgraphIndex(), study02);
     sc.GetStudyArrayFromChartUsingID(sc.Input[3].GetChartNumber(), sc.Input[3].GetStudyID(), sc.Input[3].GetSubgraphIndex(), study03);
-
+	
     study::log::Logger* p_Logger = (study::log::Logger*)sc.GetPersistentPointer(1);
-    if (sc.LastCallToFunction) {
-        if (p_Logger != NULL) {
-            delete p_Logger;
-            sc.SetPersistentPointer(1, NULL);
-        }
+    if (sc.LastCallToFunction && p_Logger != NULL) {
+        delete p_Logger;
+        sc.SetPersistentPointer(1, NULL);
         return;
     }
+
     if (p_Logger == NULL) p_Logger = (study::log::Logger*)new study::log::Logger(sc);
 
     if (fileLogAllowed.GetBoolean() == 1) {
         p_Logger->setFileName("MyLogFile.csv");
-        p_Logger->setHeader("entry_datetime, exit_datetime, entry_price, qty, study01, study02, study03, pl");  // via input - get the names of the studies!
         p_Logger->writeToFile(sc, study01, study02, study03);
     }
 
