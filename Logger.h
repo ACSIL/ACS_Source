@@ -12,10 +12,10 @@ class Logger {
    public:
     Logger(SCStudyInterfaceRef &sc);
 
+    void writeToFile(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
+    void writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
     void setHeader(const SCString &fileHeader);
-    void writeEntryDataToFile(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &volume, SCFloatArray &atr, SCFloatArray &cumDelta);
-    void writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &volume, SCFloatArray &atr, SCFloatArray &cumDelta);
-    std::string getFileName();
+    void setFileName(const std::string &fileName);
 
    private:
     std::string fileName;
@@ -26,53 +26,68 @@ class Logger {
     void writeHeader();
     void writeEntryData(SCStudyInterfaceRef &sc, SCString &stringToLog);
     void writeProfitLoss(SCStudyInterfaceRef &sc, s_SCPositionData &position);
+    SCString createString(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
 };
 
 inline Logger::Logger(SCStudyInterfaceRef &sc) {
-    SCString chartName = sc.GetChartName(sc.ChartNumber);
-    int index = chartName.LastIndexOf(' ', chartName.GetLength());
-    SCString name = chartName.GetSubString(index - 1, 0);
-    fileName = name += ".csv";
 }
 
 inline void Logger::setHeader(const SCString &fileHeader) {
     this->fileHeader = fileHeader;
 }
 
-inline std::string Logger::getFileName() {
-    return fileName;
+inline void Logger::setFileName(const std::string &fileName) {
+    this->fileName = fileName;
 }
 
-// refactor - not so much params
-inline void Logger::writeEntryDataToFile(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &volume, SCFloatArray &atr, SCFloatArray &cumDelta) {
-    float volumeOnPrevBar = volume[volume.GetArraySize() - 2];
-    float atrOnPrevBar = atr[atr.GetArraySize() - 2];
-    float cumDeltaOnPrevBar = cumDelta[cumDelta.GetArraySize() - 2];
+inline SCString Logger::createString(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03) {
+    s_SCPositionData position;
+    sc.GetTradePosition(position);
 
     SCDateTime entryDateTime = position.LastEntryDateTime;
-    int year, month, day, hour, minute, second;
-    entryDateTime.GetDateTimeYMDHMS(year, month, day, hour, minute, second);
+    SCDateTime exitDateTime = position.LastExitDateTime;
+    double entryPrice = position.AveragePrice;
+    double qty = position.PositionQuantity;
+
+    int yearEntry, monthEntry, dayEntry, hourEntry, minuteEntry, secondEntry;
+    int yearExit, monthExit, dayExit, hourExit, minuteExit, secondExit;
+
+    entryDateTime.GetDateTimeYMDHMS(yearEntry, monthEntry, dayEntry, hourEntry, minuteEntry, secondEntry);
+    exitDateTime.GetDateTimeYMDHMS(yearExit, monthExit, dayExit, hourExit, minuteExit, secondExit);
+
+    float study01OnPrevBar = study01[study01.GetArraySize() - 2];
+    float study02OnPrevBar = study02[study02.GetArraySize() - 2];
+    float study03OnPrevBar = study03[study03.GetArraySize() - 2];
 
     SCString stringToLog;
     stringToLog.Format(
-        "%i-%i-%i %0.2i:%0.2i:%0.2i,"
-        "%3.2f,"
-        // "%s,"
-        "%3.0f,"
-        "%.02f,"
-        "%.02f,"
-        "%.02f,",
-        year, month, day, hour, minute, second,
-        position.AveragePrice,
-        // position.Symbol,
-        position.PositionQuantity,
-        volumeOnPrevBar,
-        atrOnPrevBar,
-        cumDeltaOnPrevBar);
+        "%i-%i-%i %0.2i:%0.2i:%0.2i,"  // entry dt
+        "%i-%i-%i %0.2i:%0.2i:%0.2i,"  // exit dt
+        "%3.2f,"                       //entry price
+        "%3.0f,"   // qty
+        "%.02f,"   // s1
+        "%.02f,"   // s2
+        "%.02f,",  // s3
+        yearEntry, monthEntry, dayEntry, hourEntry, minuteEntry, secondEntry,
+        yearExit, monthExit, dayExit, hourExit, minuteExit, secondExit,
+        entryPrice,
+        qty,
+        study01OnPrevBar,
+        study02OnPrevBar,
+        study03OnPrevBar);
+
+    return stringToLog;
+}
+
+inline void Logger::writeToFile(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03) {
+    auto stringToLog = createString(sc, study01, study02, study03);
 
     int &p_logEntryDone = sc.GetPersistentInt(-1);      // 0
     int &p_logExitDone = sc.GetPersistentInt(-2);       // 0
     int &p_previousPosition = sc.GetPersistentInt(-3);  // 0
+
+    s_SCPositionData position;
+    sc.GetTradePosition(position);
 
     bool positionOpened = p_previousPosition == 0 && position.PositionQuantity != 0;
     bool positionClosed = position.PositionQuantity == 0;
@@ -94,7 +109,7 @@ inline void Logger::writeEntryDataToFile(SCStudyInterfaceRef &sc, s_SCPositionDa
 }
 
 // refactor - not so much params
-inline void Logger::writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &volume, SCFloatArray &atr, SCFloatArray &cumDelta) {
+inline void Logger::writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03) {
     int &p_logEntryDone = sc.GetPersistentInt(0);
     int &p_previousPositionQty = sc.GetPersistentInt(1);
 
@@ -102,9 +117,9 @@ inline void Logger::writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPosi
     bool newPositionOpened = p_previousPositionQty == 0 && position.PositionQuantity != 0;
     bool logEntryNotYetDone = p_logEntryDone == 0;
 
-    float volumeOnPrevBar = volume[volume.GetArraySize() - 2];
-    float atrOnPrevBar = atr[atr.GetArraySize() - 2];
-    float cumDeltaOnPrevBar = cumDelta[cumDelta.GetArraySize() - 2];
+    float study01OnPrevBar = study01[study01.GetArraySize() - 2];
+    float study02OnPrevBar = study02[study02.GetArraySize() - 2];
+    float study03OnPrevBar = study03[study03.GetArraySize() - 2];
 
     SCString stringToLog;
     stringToLog.Format("last position result: %0.02f", position.LastTradeProfitLoss);
@@ -141,11 +156,10 @@ inline void Logger::writeEntryData(SCStudyInterfaceRef &sc, SCString &stringToLo
     std::ofstream outFile;
     outFile.open(fileName, std::ofstream::app);
     if (outFile.is_open()) {
-        std::string data{stringToLog};
-        outFile << data;
+        outFile << stringToLog;
         outFile.close();
     } else {
-        sc.AddMessageToLog("Error writing Data into file", 1);
+        sc.AddMessageToLog("Error writing EntryData into file", 1);
     }
 }
 
@@ -154,7 +168,7 @@ inline void Logger::writeProfitLoss(SCStudyInterfaceRef &sc, s_SCPositionData &p
     double profitLoss = position.LastTradeProfitLoss;
     outFile.open(fileName, std::ofstream::app);
     if (outFile.is_open()) {
-        outFile << ", " << profitLoss << std::endl;
+        outFile << profitLoss << std::endl;
         outFile.close();
     } else {
         // flush the buffer kdyz studii sundam
