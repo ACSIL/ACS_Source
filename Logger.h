@@ -54,6 +54,8 @@ inline SCString Logger::createString(SCStudyInterfaceRef &sc, SCFloatArray &stud
     float study02OnPrevBar = study02[study02.GetArraySize() - 2];
     float study03OnPrevBar = study03[study03.GetArraySize() - 2];
 
+    sc.AddMessageToLog(std::to_string(study03OnPrevBar).c_str(), 1);
+
     SCString stringToLog;
     stringToLog.Format(
         "%i-%i-%i %0.2i:%0.2i:%0.2i,"  // entry dt
@@ -114,7 +116,7 @@ inline void Logger::writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPosi
 
     float study01OnPrevBar = study01[study01.GetArraySize() - 2];
     float study02OnPrevBar = study02[study02.GetArraySize() - 2];
-    float study03OnPrevBar = study03[study03.GetArraySize() - 2];
+    double study03OnPrevBar = study03[study03.GetArraySize() - 2];
 
     SCString stringToLog;
     stringToLog.Format("last position result: %0.02f", position.LastTradeProfitLoss);
@@ -146,10 +148,10 @@ inline void Logger::writeHeader(SCStudyInterfaceRef &sc) {
     SCString study02Name = sc.GetStudyNameFromChart(sc.Input[2].GetChartNumber(), sc.Input[2].GetStudyID());
     SCString study03Name = sc.GetStudyNameFromChart(sc.Input[3].GetChartNumber(), sc.Input[3].GetStudyID());
 
-    SCString header = "entry_datetime, exit_datetime, entry_price, qty,";
+    SCString header = "Entry DateTime, Exit DateTime, Entry Price, Qty,";
     header += study01Name.Append(",");
     header += study02Name.Append(",");
-    header += study03Name.Append(",pl");
+    header += study03Name.Append(", P/L");
 
     sc.AddMessageToLog(study01Name, 1);
 
