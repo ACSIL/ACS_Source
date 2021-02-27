@@ -31,7 +31,7 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
         sc.GraphName = "Logger";
         return;
     }
-    Logger* p_Logger = (Logger*)sc.GetPersistentPointer(1);
+    study::log::Logger* p_Logger = (study::log::Logger*)sc.GetPersistentPointer(1);
 
     if (sc.LastCallToFunction) {
         if (p_Logger != NULL) {
@@ -42,7 +42,7 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
     }
 
     if (p_Logger == NULL)
-        p_Logger = (Logger*)new Logger(sc);
+        p_Logger = (study::log::Logger*)new study::log::Logger(sc);
 
     s_SCPositionData position;
     sc.GetTradePosition(position);

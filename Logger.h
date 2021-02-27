@@ -5,6 +5,9 @@
 
 #include "sierrachart.h"
 
+namespace study {
+namespace log {
+
 class Logger {
    public:
     Logger(SCStudyInterfaceRef &sc);
@@ -159,3 +162,6 @@ inline void Logger::writeProfitLoss(SCStudyInterfaceRef &sc, s_SCPositionData &p
         sc.AddMessageToLog("Error writing PL into file", 1);
     }
 }
+}  // namespace log
+
+}  // namespace study
