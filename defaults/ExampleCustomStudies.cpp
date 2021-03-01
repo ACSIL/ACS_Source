@@ -154,7 +154,7 @@ SCSFExport scsf_MovingAverageExample(SCStudyGraphRef sc)
 		sc.Input[2].SetYesNo(0);  // No
         
         sc.Input[3].Name = "Input Data";
-        sc.Input[3].SetInputDataIndex(SC_LAST); 
+        sc.Input[3].SetInputDataIndex(); 
 		
 		return;
 	}
@@ -170,7 +170,7 @@ SCSFExport scsf_MovingAverageExample(SCStudyGraphRef sc)
     int InputDataIndex = sc.Input[3].GetInputDataIndex();
 	
 	// Set the index of the first array element to begin drawing at
-	sc.DataStartIndex = InMALength - 1;
+	sc.DataStartIndex = InM10ALength - 1;
 	
 	
 	if (InShowSMA)

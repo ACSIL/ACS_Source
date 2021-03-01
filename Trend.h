@@ -5,6 +5,9 @@
 
 #include "sierrachart.h"
 
+namespace aos {
+namespace trend {
+
 class Trend {
    private:
     const int OFFSET = 3;  // pattern is formed by three candles -> looking 3 bars back
@@ -12,6 +15,7 @@ class Trend {
    public:
     bool isUp(SCStudyInterfaceRef &sc, const int &period);
     bool isDown(SCStudyInterfaceRef &sc, const int &period);
+    void showEma(SCStudyInterfaceRef &sc);
 
    private:
     bool threeConsecutiveHigherHighs(SCStudyInterfaceRef &sc);
@@ -82,3 +86,8 @@ inline bool Trend::barHasClosed(SCStudyInterfaceRef &sc) {
 inline bool Trend::areBarsInDaySession(SCStudyInterfaceRef &sc) {
     return sc.IsDateTimeInDaySession(sc.BaseDateTimeIn[sc.Index - OFFSET]);
 }
+
+
+
+}  // namespace trendaos
+}  // namespace system
