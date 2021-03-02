@@ -8,6 +8,11 @@ SCSFExport scsf_Trend(SCStudyInterfaceRef sc) {
     SCInputRef inputStartTradingAt = sc.Input[0];
     SCInputRef inputStopTradingAt = sc.Input[1];
     SCInputRef inputFlatPostionAt = sc.Input[2];
+    
+    // SCInputRef inputShowEma = sc.get
+
+    SCInputRef inputEmaPeriod = sc.Input[10];
+    SCSubgraphRef subgraphEMA = sc.Subgraph[0];
 
     if (sc.SetDefaults) {
         sc.GraphName = "Trend";
@@ -21,9 +26,12 @@ SCSFExport scsf_Trend(SCStudyInterfaceRef sc) {
         inputFlatPostionAt.Name = "Flat postion at: ";
         inputFlatPostionAt.SetTime(HMS_TIME(15, 14, 30));
 
-        sc.Subgraph[0].Name = "Ema";
-        sc.Subgraph[0].DrawStyle = DRAWSTYLE_LINE;
-
+        subgraphEMA.Name = "Exp. Moving Average";
+        subgraphEMA.DrawStyle = DRAWSTYLE_LINE;
+        subgraphEMA.PrimaryColor = RGB(102, 255, 102);
+        inputEmaPeriod.Name = "Exp. Moving Average Period";
+        inputEmaPeriod.SetInt(10);
+        
         return;
     }
 
@@ -50,19 +58,19 @@ SCSFExport scsf_Trend(SCStudyInterfaceRef sc) {
     bool isTimeToFlat = sc.BaseDateTimeIn[sc.Index].GetTime() >= inputFlatPostionAt.GetTime();
     bool positionOpened = position.PositionQuantity != 0;
 
-    sc.SimpleMovAvg(sc.BaseDataIn[SC_LAST], sc.Subgraph[10], sc.Index);
+    int emaPeriod = inputEmaPeriod.GetInt();
+    
+    p_Trend->showEmaSubgraph(sc, subgraphEMA, emaPeriod);
 
 
-    // if (areTradingHours) {
-    //     if (p_Trend->isUp(sc, 7)) {
-    //         int entryCheck = (int)sc.BuyEntry(order);
-    //         sc.AddMessageToLog(std::to_string(entryCheck).c_str(), 1);
-    //     }
-    //     if (p_Trend->isDown(sc, 7)) {
-    //         int entryCheck = (int)sc.SellEntry(order);
-    //         sc.AddMessageToLog(std::to_string(entryCheck).c_str(), 1);
-    //     }
-    // }
+    if (areTradingHours) {
+        if (p_Trend->isUp(sc, emaPeriod)) {
+            int entryCheck = (int)sc.BuyEntry(order);
+        }
+        // if (p_Trend->isDown(sc, 7)) {
+        //     int entryCheck = (int)sc.SellEntry(order);
+        // }
+    }
 
-    // if (positionOpened && isTimeToFlat) sc.FlattenPosition();
+    if (positionOpened && isTimeToFlat) sc.FlattenPosition();
 }

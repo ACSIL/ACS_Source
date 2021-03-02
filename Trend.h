@@ -15,9 +15,13 @@ class Trend {
    public:
     bool isUp(SCStudyInterfaceRef &sc, const int &period);
     bool isDown(SCStudyInterfaceRef &sc, const int &period);
-    void showEma(SCStudyInterfaceRef &sc);
+    void setEmaPeriod(SCStudyInterfaceRef &sc, const int &period);
+
+    void showEmaSubgraph(SCStudyInterfaceRef &sc, SCSubgraphRef &subgraphEMA, int &emaPeriod);
 
    private:
+    int emaPeriod;
+
     bool threeConsecutiveHigherHighs(SCStudyInterfaceRef &sc);
     bool threeConsecutiveHigherLows(SCStudyInterfaceRef &sc);
     bool threeConsecutiveLowerHighs(SCStudyInterfaceRef &sc);
@@ -32,11 +36,11 @@ class Trend {
 };
 
 inline bool Trend::isUp(SCStudyInterfaceRef &sc, const int &period) {
-    return threeConsecutiveHigherHighs(sc) && threeConsecutiveHigherLows(sc) && emaBellowLowOfCurrentBar(sc, period) && areBarsInDaySession(sc);
+    return  areBarsInDaySession(sc) && threeConsecutiveHigherHighs(sc) && threeConsecutiveHigherLows(sc) && barHasClosed(sc);// && emaBellowLowOfCurrentBar(sc, period);
 }
 
 inline bool Trend::isDown(SCStudyInterfaceRef &sc, const int &period) {
-    return threeConsecutiveLowerHighs(sc) && threeConsecutiveLowerLows(sc) && emaAboveHighOfCurrentBar(sc, period) && areBarsInDaySession(sc);
+    return areBarsInDaySession(sc) && threeConsecutiveLowerHighs(sc) && threeConsecutiveLowerLows(sc) && emaAboveHighOfCurrentBar(sc, period);
 }
 
 inline bool Trend::threeConsecutiveHigherHighs(SCStudyInterfaceRef &sc) {
@@ -87,7 +91,9 @@ inline bool Trend::areBarsInDaySession(SCStudyInterfaceRef &sc) {
     return sc.IsDateTimeInDaySession(sc.BaseDateTimeIn[sc.Index - OFFSET]);
 }
 
+inline void Trend::showEmaSubgraph(SCStudyInterfaceRef &sc, SCSubgraphRef subgraphEMA, int &emaPeriod) {
+    sc.ExponentialMovAvg(sc.BaseDataIn[SC_LAST], subgraphEMA.Data, emaPeriod);
+}
 
-
-}  // namespace trendaos
-}  // namespace system
+}  // namespace trend
+}  // namespace aos

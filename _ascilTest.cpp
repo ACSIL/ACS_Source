@@ -49,26 +49,26 @@ SCSFExport scsf_ColorFromFirstBarOfTradignDay(SCStudyInterfaceRef sc) {
     }
 }
 
-// SCSFExport scsf_ColorThreeHHBars(SCStudyInterfaceRef sc) {
-//     SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
-//     if (sc.SetDefaults) {
-//         sc.GraphName = "Color Three HH bars";
-//         sc.GraphRegion = 0;
-//         Subgraph_IB.Name = "IB";
-//         Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
-//         Subgraph_IB.PrimaryColor = RGB(0, 0, 255);
-//         sc.AutoLoop = 1;
-//         return;
-//     }
+SCSFExport scsf_ColorThreeHHBars(SCStudyInterfaceRef sc) {
+    SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
+    if (sc.SetDefaults) {
+        sc.GraphName = "Color Three HH bars";
+        sc.GraphRegion = 0;
+        Subgraph_IB.Name = "IB";
+        Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
+        Subgraph_IB.PrimaryColor = RGB(0, 0, 255);
+        sc.AutoLoop = 1;
+        return;
+    }
 
-//     if (StartIndex == sc.Index) sc.Index = 0;
+    if (StartIndex == sc.Index) sc.Index = 0;
 
-//     if (sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2]) {
-//         Subgraph_IB[sc.Index] = sc.Index;
-//         Subgraph_IB[sc.Index - 1] = sc.Index;
-//         Subgraph_IB[sc.Index - 2] = sc.Index;
-//     }
-// }
+    if (sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2]) {
+        Subgraph_IB[sc.Index] = sc.Index;
+        Subgraph_IB[sc.Index - 1] = sc.Index;
+        Subgraph_IB[sc.Index - 2] = sc.Index;
+    }
+}
 
 SCSFExport scsf_TakeTradeOnThirdRisingBar(SCStudyInterfaceRef sc) {
     SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
