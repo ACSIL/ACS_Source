@@ -1,21 +1,21 @@
-#include "Trend.h"
-
+#include "ThreeCandlesEMATrendPattern.h"
+#include "ThreeCandlesTrendPattern.h"
 #include "sierrachart.h"
 
-SCDLLName("Trend");
+SCDLLName("Ex's Trend Patterns");
 
-SCSFExport scsf_Trend(SCStudyInterfaceRef sc) {
+SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
     SCInputRef inputStartTradingAt = sc.Input[0];
     SCInputRef inputStopTradingAt = sc.Input[1];
     SCInputRef inputFlatPostionAt = sc.Input[2];
-    
+
     // SCInputRef inputShowEma = sc.get
 
     SCInputRef inputEmaPeriod = sc.Input[10];
     SCSubgraphRef subgraphEMA = sc.Subgraph[0];
 
     if (sc.SetDefaults) {
-        sc.GraphName = "Trend";
+        sc.GraphName = "TrendPatterns";
         sc.GraphRegion = 0;
         sc.AutoLoop = 1;
 
@@ -31,26 +31,31 @@ SCSFExport scsf_Trend(SCStudyInterfaceRef sc) {
         subgraphEMA.PrimaryColor = RGB(102, 255, 102);
         inputEmaPeriod.Name = "Exp. Moving Average Period";
         inputEmaPeriod.SetInt(10);
-        
+
         return;
     }
 
-    aos::trend::Trend *p_Trend = (aos::trend::Trend *)sc.GetPersistentPointer(1);
+    aos::trend::ThreeCandlesEMA *p_ThreeCandlesEMA = (aos::trend::ThreeCandlesEMA *)sc.GetPersistentPointer(1);
 
-    if (sc.LastCallToFunction && p_Trend) {
-        delete p_Trend;
+    if (p_ThreeCandlesEMA != NULL && sc.LastCallToFunction) {
+        delete p_ThreeCandlesEMA;
         sc.SetPersistentPointer(1, NULL);
         return;
     }
 
-    if (p_Trend == NULL) p_Trend = (aos::trend::Trend *)new aos::trend::Trend();
+    if (p_ThreeCandlesEMA == NULL)
+        p_ThreeCandlesEMA = (aos::trend::ThreeCandlesEMA *)new aos::trend::ThreeCandlesEMA();
 
+    int emaPeriod = inputEmaPeriod.GetInt();
+    p_ThreeCandlesEMA->setEmaPeriod(emaPeriod);
+    p_ThreeCandlesEMA->showEmaSubgraph(sc, subgraphEMA);
+    
     s_SCPositionData position;
     sc.GetTradePosition(position);
     s_SCNewOrder order;
     order.OrderQuantity = 1;
     order.OrderType = SCT_ORDERTYPE_MARKET;
-    order.TextTag = "Trend - Three rising bars with indicators filter";
+    order.TextTag = "Three Candles Trend Pattern";
     order.Target1Offset = 30 * sc.TickSize;
     order.Stop1Offset = 10 * sc.TickSize;
 
@@ -58,16 +63,11 @@ SCSFExport scsf_Trend(SCStudyInterfaceRef sc) {
     bool isTimeToFlat = sc.BaseDateTimeIn[sc.Index].GetTime() >= inputFlatPostionAt.GetTime();
     bool positionOpened = position.PositionQuantity != 0;
 
-    int emaPeriod = inputEmaPeriod.GetInt();
-    
-    p_Trend->showEmaSubgraph(sc, subgraphEMA, emaPeriod);
-
-
     if (areTradingHours) {
-        if (p_Trend->isUp(sc, emaPeriod)) {
+        if (p_ThreeCandlesEMA->isUp(sc)) {
             int entryCheck = (int)sc.BuyEntry(order);
         }
-        // if (p_Trend->isDown(sc, 7)) {
+        // if (p_ThreeCandlesEMA->isDown(sc, 7)) {
         //     int entryCheck = (int)sc.SellEntry(order);
         // }
     }
