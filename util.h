@@ -21,6 +21,12 @@ class Logger {
         comment += strVal;
         sc.AddMessageToLog(comment, 1);
     }
+
+    static void log(SCStudyInterfaceRef& sc, double value, SCString comment = "") {
+        SCString strVal = std::to_string(value).c_str();
+        comment += strVal;
+        sc.AddMessageToLog(comment, 1);
+    }
 };
 
 class Display {

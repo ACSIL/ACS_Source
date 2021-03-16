@@ -3,7 +3,7 @@
 #include "sierrachart.h"
 #include "util.h"
 
-SCDLLName("Test");
+SCDLLName("ACIL Sandbox");
 
 SCSFExport scsf_ColorBarsFromStartOfSession(SCStudyInterfaceRef sc) {
     SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
@@ -61,7 +61,7 @@ SCSFExport scsf_ColorThreeHHBars(SCStudyInterfaceRef sc) {
         return;
     }
 
-    if (StartIndex == sc.Index) sc.Index = 0;
+    // if (StartIndex == sc.Index) sc.Index = 0;
 
     if (sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2]) {
         Subgraph_IB[sc.Index] = sc.Index;
@@ -114,20 +114,15 @@ SCSFExport scsf_TakeTradeOnThirdRisingBar(SCStudyInterfaceRef sc) {
 }
 
 SCSFExport scsf_LogUtilsTest(SCStudyInterfaceRef sc) {
-    SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
     if (sc.SetDefaults) {
         sc.GraphRegion = 0;
-        Subgraph_IB.Name = "IB";
-        Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
-        Subgraph_IB.PrimaryColor = RGB(255, 255, 255);
-        sc.AutoLoop = 1;
-        return;
     }
-
     SCDateTime TradingDayStartDateTime = sc.GetTradingDayStartDateTimeOfBar(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
 
-    util::Logger::log(sc, TradingDayStartDateTime);
-    util::Logger::log(sc, 3.23);
+    util::Logger::log(sc, TradingDayStartDateTime, "datetime");
+    util::Logger::log(sc, 22, "int");
+    util::Logger::log(sc, 3.23, "double");
+    util::Logger::log(sc, "hello work", "string");
 }
 
 SCSFExport scsf_GetValuesFromAnotherCharts(SCStudyInterfaceRef sc) {

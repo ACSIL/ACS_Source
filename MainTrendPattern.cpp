@@ -35,7 +35,7 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
         return;
     }
 
-    aos::trend::ThreeCandlesEMA *p_ThreeCandlesEMA = (aos::trend::ThreeCandlesEMA *)sc.GetPersistentPointer(1);
+    aos::trend::ThreeCandlesEMA* p_ThreeCandlesEMA = (aos::trend::ThreeCandlesEMA *)sc.GetPersistentPointer(1);
 
     if (p_ThreeCandlesEMA != NULL && sc.LastCallToFunction) {
         delete p_ThreeCandlesEMA;
