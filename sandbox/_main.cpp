@@ -1,6 +1,9 @@
+#include <ctime>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <string>
+
 using namespace std;
 
 void writeData(const char* fileName) {
@@ -43,6 +46,23 @@ void writeToFile() {
     writeData(fileName);
 }
 
-int main() {
-    writeToFile();
+// int main() {
+//     void getCurrentTime();
+// }
+
+std::string getCurrentTime() {
+    auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
+    return oss.str();
 }
+
+#include <ctime>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+
+int main() {
+    std::cout << getCurrentTime();
+    }

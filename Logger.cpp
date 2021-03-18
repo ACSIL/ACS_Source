@@ -6,6 +6,11 @@
 
 #include <fstream>
 #include <string>
+#include <ctime>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+
 
 #include "sierrachart.h"
 
@@ -49,8 +54,13 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
 
     if (p_Logger == NULL) p_Logger = (study::log::Logger*)new study::log::Logger(sc);
 
+    std::string chartName {sc.GetChartName(sc.ChartNumber)};
+    std::string::iterator endPos = std::remove(chartName.begin(), chartName.end(), ' ');
+    chartName.erase(endPos, chartName.end());
+    std::string fileName =  chartName + ".csv";
+
     if (fileLogAllowed.GetBoolean() == 1) {
-        p_Logger->setFileName("MyLogFileNew.csv");
+        // p_Logger->setFileName(fileName);
         p_Logger->writeToFile(sc, study01, study02, study03);
     }
 
@@ -58,3 +68,19 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
     //     p_Logger->writeEntryDataToMessageLog(sc, position, study01, study02, study03);
     // }
 }
+
+// std::string getChartName(SCStudyInterfaceRef sc){
+//     std::string chartName {sc.GetChartName(sc.ChartNumber)};
+//     std::string::iterator endPos = std::remove(chartName.begin(), chartName.end(), ' ');
+//     chartName.erase(endPos, chartName.end());
+//     return chartName;
+// }
+
+// std::string getCurrentTime() {
+//     auto t = std::time(nullptr);
+//     auto tm = *std::localtime(&t);
+//     std::ostringstream oss;
+//     oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
+//     return oss.str();
+// }
+

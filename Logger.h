@@ -14,26 +14,30 @@ class Logger {
 
     void writeToFile(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
     void writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
-    void setFileName(const std::string &fileName);
 
    private:
     std::string fileName;
     std::string fileHeader;
-
+  
     bool fileExists();
     bool fileIsEmpty();
     void writeHeader(SCStudyInterfaceRef &sc);
     void writeEntryData(SCStudyInterfaceRef &sc, SCString &stringToLog);
     void writeProfitLoss(SCStudyInterfaceRef &sc, s_SCPositionData &position);
     SCString createString(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
+    // std::string getChartName(SCStudyInterfaceRef &sc);
+    // std::string getCurrentTime();
+    // void createFileName(SCStudyInterfaceRef &sc);
+
 };
 
 inline Logger::Logger(SCStudyInterfaceRef &sc) {
+    std::string chartName {sc.GetChartName(sc.ChartNumber)};
+    std::string::iterator endPos = std::remove(chartName.begin(), chartName.end(), ' ');
+    chartName.erase(endPos, chartName.end());
+    this->fileName = chartName + ".csv";
 }
 
-inline void Logger::setFileName(const std::string &fileName) {
-    this->fileName = fileName;
-}
 
 inline SCString Logger::createString(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03) {
     s_SCPositionData position;
@@ -76,7 +80,6 @@ inline SCString Logger::createString(SCStudyInterfaceRef &sc, SCFloatArray &stud
 
 inline void Logger::writeToFile(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03) {
     auto stringToLog = createString(sc, study01, study02, study03);
-
     int &p_logEntryDone = sc.GetPersistentInt(-1);      // 0
     int &p_logExitDone = sc.GetPersistentInt(-2);       // 0
     int &p_previousPosition = sc.GetPersistentInt(-3);  // 0
@@ -90,6 +93,7 @@ inline void Logger::writeToFile(SCStudyInterfaceRef &sc, SCFloatArray &study01, 
     bool logExitNotDone = p_logExitDone == 0;
 
     if (positionOpened && logEntryNotDone) {
+
         if (!fileExists()) writeHeader(sc);
         writeEntryData(sc, stringToLog);
         p_logExitDone = 0;
@@ -182,6 +186,27 @@ inline void Logger::writeProfitLoss(SCStudyInterfaceRef &sc, s_SCPositionData &p
         sc.AddMessageToLog("Error writing PL into file", 1);
     }
 }
+
+inline std::string getChartName(SCStudyInterfaceRef sc){
+    std::string chartName {sc.GetChartName(sc.ChartNumber)};
+    std::string::iterator endPos = std::remove(chartName.begin(), chartName.end(), ' ');
+    chartName.erase(endPos, chartName.end());
+    return chartName;
+}
+
+// inline std::string getCurrentTime() {
+//     auto t = std::time(nullptr);
+//     auto tm = *std::localtime(&t);
+//     std::ostringstream oss;
+//     oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
+//     return oss.str();
+// }
+
+// inline void Logger::createFileName(SCStudyInterfaceRef sc) {
+//     std::string chartName = getChartName(sc);
+//     std::string currentTime = getCurrentTime();
+//     this->fileName = chartName + currentTime + ".csv";
+// }
 }  // namespace log
 
 }  // namespace study
