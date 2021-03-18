@@ -2,7 +2,7 @@
 #include "ThreeCandlesTrendPattern.h"
 #include "sierrachart.h"
 
-SCDLLName("Ex's Trend Patterns");
+SCDLLName("Nirvikalpa's Trend Patterns");
 
 SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
     SCInputRef inputStartTradingAt = sc.Input[0];
@@ -56,8 +56,8 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
     order.OrderQuantity = 1;
     order.OrderType = SCT_ORDERTYPE_MARKET;
     order.TextTag = "Three Candles Trend Pattern";
-    order.Target1Offset = 30 * sc.TickSize;
-    order.Stop1Offset = 10 * sc.TickSize;
+    order.Target1Offset = 60 * sc.TickSize;
+    order.Stop1Offset = 30 * sc.TickSize;
 
     bool areTradingHours = sc.BaseDateTimeIn[sc.Index].GetTime() > inputStartTradingAt.GetTime() && sc.BaseDateTimeIn[sc.Index].GetTime() < inputStopTradingAt.GetTime();
     bool isTimeToFlat = sc.BaseDateTimeIn[sc.Index].GetTime() >= inputFlatPostionAt.GetTime();
@@ -67,9 +67,9 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
         if (p_ThreeCandlesEMA->isUp(sc)) {
             int entryCheck = (int)sc.BuyEntry(order);
         }
-        // if (p_ThreeCandlesEMA->isDown(sc, 7)) {
-        //     int entryCheck = (int)sc.SellEntry(order);
-        // }
+        if (p_ThreeCandlesEMA->isDown(sc)) {
+            int entryCheck = (int)sc.SellEntry(order);
+        }
     }
 
     if (positionOpened && isTimeToFlat) sc.FlattenPosition();

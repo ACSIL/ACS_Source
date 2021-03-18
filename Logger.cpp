@@ -9,7 +9,7 @@
 
 #include "sierrachart.h"
 
-SCDLLName("Ex's Logger");
+SCDLLName("Nirvikalpa's Logger");
 
 SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
     SCInputRef messageLogAllowed = sc.Input[10];
@@ -50,7 +50,7 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
     if (p_Logger == NULL) p_Logger = (study::log::Logger*)new study::log::Logger(sc);
 
     if (fileLogAllowed.GetBoolean() == 1) {
-        p_Logger->setFileName("MyLogFile.csv");
+        p_Logger->setFileName("MyLogFileNew.csv");
         p_Logger->writeToFile(sc, study01, study02, study03);
     }
 

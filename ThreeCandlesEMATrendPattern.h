@@ -27,7 +27,7 @@ bool ThreeCandlesEMA::isUp(SCStudyInterfaceRef &sc) {
 }
 
 bool ThreeCandlesEMA::isDown(SCStudyInterfaceRef &sc) {
-    return ThreeCandles::isUp(sc) && emaAboveHighOfCurrentBar(sc);
+    return ThreeCandles::isDown(sc) && emaAboveHighOfCurrentBar(sc);
 }
 
 inline void ThreeCandlesEMA::setEmaPeriod(const int &emaPeriod) {

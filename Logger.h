@@ -59,14 +59,12 @@ inline SCString Logger::createString(SCStudyInterfaceRef &sc, SCFloatArray &stud
     SCString stringToLog;
     stringToLog.Format(
         "%i-%i-%i %0.2i:%0.2i:%0.2i,"  // entry dt
-        "%i-%i-%i %0.2i:%0.2i:%0.2i,"  // exit dt
         "%3.2f,"                       //entry price
         "%3.0f,"                       // qty
         "%.02f,"                       // s1
         "%.02f,"                       // s2
         "%.02f,",                      // s3
         yearEntry, monthEntry, dayEntry, hourEntry, minuteEntry, secondEntry,
-        yearExit, monthExit, dayExit, hourExit, minuteExit, secondExit,
         entryPrice,
         qty,
         study01OnPrevBar,
@@ -142,18 +140,18 @@ inline bool Logger::fileExists() {
 
 inline void Logger::writeHeader(SCStudyInterfaceRef &sc) {
     std::ofstream outFile;
-    sc.AddMessageToLog("in write header", 1);
+    // sc.AddMessageToLog("in write header", 1);
 
     SCString study01Name = sc.GetStudyNameFromChart(sc.Input[1].GetChartNumber(), sc.Input[1].GetStudyID());
     SCString study02Name = sc.GetStudyNameFromChart(sc.Input[2].GetChartNumber(), sc.Input[2].GetStudyID());
     SCString study03Name = sc.GetStudyNameFromChart(sc.Input[3].GetChartNumber(), sc.Input[3].GetStudyID());
 
-    SCString header = "Entry DateTime, Exit DateTime, Entry Price, Qty,";
+    SCString header = "Entry DateTime, Entry Price, Qty,";
     header += study01Name.Append(",");
     header += study02Name.Append(",");
-    header += study03Name.Append(", P/L");
+    header += study03Name.Append(", PL");
 
-    sc.AddMessageToLog(study01Name, 1);
+    // sc.AddMessageToLog(study01Name, 1);
 
     outFile.open(fileName, std::ofstream::app);
     if (outFile.is_open()) outFile << header << std::endl;
