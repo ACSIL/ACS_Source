@@ -9,9 +9,11 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
     SCInputRef inputStopTradingAt = sc.Input[1];
     SCInputRef inputFlatPostionAt = sc.Input[2];
 
-    // SCInputRef inputShowEma = sc.get
+    SCInputRef inputProfitInTicks = sc.Input[3];
+    SCInputRef inputLossInTicks = sc.Input[4];
 
     SCInputRef inputEmaPeriod = sc.Input[10];
+
     SCSubgraphRef subgraphEMA = sc.Subgraph[0];
 
     if (sc.SetDefaults) {
@@ -22,9 +24,18 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
         inputStartTradingAt.Name = "Start trading at: ";
         inputStartTradingAt.SetTime(HMS_TIME(8, 30, 0));
         inputStopTradingAt.Name = "Stop trading at: ";
-        inputStopTradingAt.SetTime(HMS_TIME(15, 00, 0));
+        inputStopTradingAt.SetTime(HMS_TIME(14, 00, 0));
         inputFlatPostionAt.Name = "Flat postion at: ";
-        inputFlatPostionAt.SetTime(HMS_TIME(15, 14, 30));
+        inputFlatPostionAt.SetTime(HMS_TIME(14, 30, 00));
+
+        inputProfitInTicks.Name = "Profit in ticks";
+        inputProfitInTicks.SetInt(30);
+        inputLossInTicks.Name = "Loss in ticks";
+        inputLossInTicks.SetInt(30);
+
+        sc.Subgraph[1].Name = "visible";
+        sc.Subgraph[1].DrawStyle = DRAWSTYLE_COLOR_BAR;
+        sc.Subgraph[1].PrimaryColor = RGB(0, 0, 255);
 
         subgraphEMA.Name = "Exp. Moving Average";
         subgraphEMA.DrawStyle = DRAWSTYLE_LINE;
@@ -35,7 +46,7 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
         return;
     }
 
-    aos::trend::ThreeCandlesEMA* p_ThreeCandlesEMA = (aos::trend::ThreeCandlesEMA *)sc.GetPersistentPointer(1);
+    aos::trend::ThreeCandlesEMA *p_ThreeCandlesEMA = (aos::trend::ThreeCandlesEMA *)sc.GetPersistentPointer(1);
 
     if (p_ThreeCandlesEMA != NULL && sc.LastCallToFunction) {
         delete p_ThreeCandlesEMA;
@@ -49,26 +60,29 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
     int emaPeriod = inputEmaPeriod.GetInt();
     p_ThreeCandlesEMA->setEmaPeriod(emaPeriod);
     p_ThreeCandlesEMA->showEmaSubgraph(sc, subgraphEMA);
-    
+
     s_SCPositionData position;
     sc.GetTradePosition(position);
     s_SCNewOrder order;
     order.OrderQuantity = 1;
     order.OrderType = SCT_ORDERTYPE_MARKET;
     order.TextTag = "Three Candles Trend Pattern";
-    order.Target1Offset = 60 * sc.TickSize;
-    order.Stop1Offset = 30 * sc.TickSize;
+    order.Target1Offset = inputProfitInTicks.GetInt() * sc.TickSize;
+    order.Stop1Offset = inputLossInTicks.GetInt() * sc.TickSize;
 
     bool areTradingHours = sc.BaseDateTimeIn[sc.Index].GetTime() > inputStartTradingAt.GetTime() && sc.BaseDateTimeIn[sc.Index].GetTime() < inputStopTradingAt.GetTime();
     bool isTimeToFlat = sc.BaseDateTimeIn[sc.Index].GetTime() >= inputFlatPostionAt.GetTime();
     bool positionOpened = position.PositionQuantity != 0;
 
     if (areTradingHours) {
-        if (p_ThreeCandlesEMA->isUp(sc)) {
-            int entryCheck = (int)sc.BuyEntry(order);
-        }
+        // if (p_ThreeCandlesEMA->isUp(sc) && p_ThreeCandlesEMA->emaBellowLowOfCurrentBar(sc)) {
+        //     // int entryCheck = (int)sc.BuyEntry(order);
+        //     // sc.Subgraph[1][sc.Index] = sc.Index;
+        // }
         if (p_ThreeCandlesEMA->isDown(sc)) {
             int entryCheck = (int)sc.SellEntry(order);
+            sc.Subgraph[1][sc.Index] = sc.Index;
+
         }
     }
 

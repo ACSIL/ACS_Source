@@ -28,26 +28,28 @@ SCSFExport scsf_ColorBarsFromStartOfSession(SCStudyInterfaceRef sc) {
     }
 }
 
-SCSFExport scsf_ColorFromFirstBarOfTradignDay(SCStudyInterfaceRef sc) {
-    SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
-    if (sc.SetDefaults) {
-        sc.GraphRegion = 0;
-        Subgraph_IB.Name = "IB";
-        Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
-        Subgraph_IB.PrimaryColor = RGB(0, 0, 255);
-        sc.AutoLoop = 1;
-        return;
-    }
-    SCDateTime TradingDayStartDateTime = sc.GetTradingDayStartDateTimeOfBar(sc.BaseDateTimeIn[sc.Index]);
-    SCString s = sc.FormatDateTime(TradingDayStartDateTime).GetChars();
-    auto StartIndex = sc.GetFirstIndexForDate(sc.ChartNumber, TradingDayStartDateTime.GetDate());
+// SCSFExport scsf_ColorBarsThatHaveCloseAboveEMA(SCStudyInterfaceRef sc) {
+//     SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
+//     if (sc.SetDefaults) {
+//         sc.GraphRegion = 0;
+//         Subgraph_IB.Name = "IB";
+//         Subgraph_IB.DrawStyle = DRAWSTYLE_COLOR_BAR;
+//         Subgraph_IB.PrimaryColor = RGB(0, 0, 255);
+//         sc.AutoLoop = 1;
+//         return;
+//     }
 
-    sc.AddMessageToLog(s, 1);
+//     int startIndex = util::DateTime::getFirstIndexOfSession(sc);
 
-    if (sc.Index > StartIndex) {
-        Subgraph_IB[sc.Index] = StartIndex;
-    }
-}
+//     util::Logger::log(sc, startIndex, "starting index");
+//     util::Logger::log(sc, sc.Index, "sc.Index index");
+//     util::Logger::log(sc, sc.IndexOfFirstVisibleBar, "sc.FirstVisible index");
+//     util::Logger::log(sc, sc.IndexOfLastVisibleBar, "sc.LastVisible index");
+
+//     if (sc.Index > startIndex) {
+//         Subgraph_IB[sc.Index] = startIndex;
+//     }
+// }
 
 SCSFExport scsf_ColorThreeHHBars(SCStudyInterfaceRef sc) {
     SCSubgraphRef Subgraph_IB = sc.Subgraph[0];
@@ -182,9 +184,9 @@ SCSFExport scsf_DrawStudy(SCStudyInterfaceRef sc) {
         sc.Subgraph[0].PrimaryColor = RGB(102, 255, 102);
         sc.Subgraph[0].DrawStyle = DRAWSTYLE_LINE;
 
-        sc.Input[0].Name = "Moving Average";  
-        sc.Input[0].SetFloat(10.0f);                 
-        sc.AutoLoop = 1;                             
+        sc.Input[0].Name = "Moving Average";
+        sc.Input[0].SetFloat(10.0f);
+        sc.AutoLoop = 1;
         sc.FreeDLL = 1;
         sc.GraphRegion = 0;
         return;
@@ -227,4 +229,79 @@ SCSFExport scsf_MovingAverageExample(SCStudyGraphRef sc) {
         sc.BaseDataIn[SC_LAST],  // This is the input array or source data. This is using the Last / Close from each bar.
         sc.Subgraph[0].Data,     // This designates your output array (subgraph/plot). This is using Subgraph 0.
         InMALength);             // This is the length for the simple moving average, which is from Input 0.
+}
+
+SCSFExport scsf_ColorBarsThatHaveCloseAboveEMA(SCStudyInterfaceRef sc) {
+    if (sc.SetDefaults) {
+        sc.GraphRegion = 0;
+        sc.AutoLoop = 1;
+
+        sc.Subgraph[0].Name = "";
+        sc.Subgraph[0].DrawStyle = DRAWSTYLE_COLOR_BAR;
+        sc.Subgraph[0].PrimaryColor = RGB(0, 0, 255);
+
+        sc.Subgraph[1].Name = "Simple Moving Average";
+        sc.Subgraph[1].PrimaryColor = RGB(102, 255, 102);
+        sc.Subgraph[1].LineStyle = LINESTYLE_DOT;
+
+        sc.Input[1].Name = "Moving Average Length";
+        sc.Input[1].SetFloat(10.0f);
+
+        return;
+    }
+
+    int InMALength = sc.Input[0].GetInt();
+
+    sc.DataStartIndex = InMALength - 1;
+
+    sc.SimpleMovAvg(
+        sc.BaseDataIn[SC_LAST],  // This is the input array or source data. This is using the Last / Close from each bar.
+        sc.Subgraph[1].Data,     // This designates your output array (subgraph/plot). This is using Subgraph 1.
+        InMALength);
+
+    float EmaAtCurBar = sc.Subgraph[1][sc.Index];
+
+    if (EmaAtCurBar > sc.Close[sc.Index])
+        sc.Subgraph[0][sc.Index] = sc.Index;
+}
+
+SCSFExport scsf_ColorBarWithCloseAboveEma(SCStudyInterfaceRef sc) {
+    SCSubgraphRef Subgraph_Average = sc.Subgraph[0];
+    SCSubgraphRef Subgraph_ColoredBar = sc.Subgraph[1];
+    SCInputRef Input_Length = sc.Input[0];
+
+    if (sc.SetDefaults) {
+        sc.GraphRegion = 0;
+        sc.ValueFormat = VALUEFORMAT_INHERITED;
+        Subgraph_Average.Name = "Average";
+
+        Subgraph_ColoredBar.Name = "dfdfsdfsd";
+        Subgraph_ColoredBar.DrawStyle = DRAWSTYLE_COLOR_BAR;
+        Subgraph_ColoredBar.PrimaryColor = RGB(0, 0, 255);
+
+        // Set the color, style and line width for the subgraph
+        Subgraph_Average.PrimaryColor = RGB(0, 255, 0);
+        Subgraph_Average.DrawStyle = DRAWSTYLE_LINE;
+        Subgraph_Average.LineWidth = 2;
+
+        // Set the Length input and default it to 30
+        Input_Length.Name = "Length";
+        Input_Length.SetInt(30);
+        Input_Length.SetIntLimits(1, MAX_STUDY_LENGTH);
+        Input_Length.SetDescription("The number of bars to average.");
+
+        sc.AutoLoop = 1;
+
+        sc.AlertOnlyOncePerBar = true;
+
+        // Must return before doing any data processing if sc.SetDefaults is set
+        return;
+    }
+    sc.DataStartIndex = Input_Length.GetInt() - 1;
+
+    sc.SimpleMovAvg(sc.Close, Subgraph_Average, Input_Length.GetInt());
+
+    if (sc.Close[sc.Index] > Subgraph_Average[sc.Index]) {
+       Subgraph_ColoredBar[sc.Index] = sc.Index;
+}
 }

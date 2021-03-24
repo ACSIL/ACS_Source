@@ -14,9 +14,13 @@ class Logger {
 
     void writeToFile(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
     void writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
+<<<<<<< HEAD
+=======
+    void setFileName(const SCString &fileName);
+>>>>>>> tmp
 
    private:
-    std::string fileName;
+    SCString fileName;
     std::string fileHeader;
   
     bool fileExists();
@@ -38,6 +42,12 @@ inline Logger::Logger(SCStudyInterfaceRef &sc) {
     this->fileName = chartName + ".csv";
 }
 
+<<<<<<< HEAD
+=======
+inline void Logger::setFileName(const SCString &fileName) {
+    this->fileName = fileName;
+}
+>>>>>>> tmp
 
 inline SCString Logger::createString(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03) {
     s_SCPositionData position;

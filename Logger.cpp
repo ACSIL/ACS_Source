@@ -32,6 +32,9 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
         sc.Input[2].SetChartStudySubgraphValues(0, 0, 0);
         sc.Input[3].Name = "3. study";
         sc.Input[3].SetChartStudySubgraphValues(0, 0, 0);
+        
+        sc.Input[4].Name = "File name";
+        sc.Input[4].SetString(sc.GetChartName(sc.ChartNumber) + ".csv");
 
         sc.GraphRegion = 0;
         sc.GraphName = "Logger";
@@ -54,6 +57,7 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
 
     if (p_Logger == NULL) p_Logger = (study::log::Logger*)new study::log::Logger(sc);
 
+<<<<<<< HEAD
     std::string chartName {sc.GetChartName(sc.ChartNumber)};
     std::string::iterator endPos = std::remove(chartName.begin(), chartName.end(), ' ');
     chartName.erase(endPos, chartName.end());
@@ -61,6 +65,11 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
 
     if (fileLogAllowed.GetBoolean() == 1) {
         // p_Logger->setFileName(fileName);
+=======
+
+    if (fileLogAllowed.GetBoolean() == 1) {
+        p_Logger->setFileName(sc.Input[4].GetString());
+>>>>>>> tmp
         p_Logger->writeToFile(sc, study01, study02, study03);
     }
 

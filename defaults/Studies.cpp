@@ -1,3 +1,4 @@
+
 /*****************************************************************************
 	This is a C++ source code file.  This file contains example Advanced Custom
 	Study functions.  It also contains functions for some built-in studies

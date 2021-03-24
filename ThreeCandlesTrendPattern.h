@@ -16,7 +16,7 @@ class ThreeCandles {
     bool isUp(SCStudyInterfaceRef &sc);
     bool isDown(SCStudyInterfaceRef &sc);
 
-   private:
+   protected:
     bool threeConsecutiveHigherHighs(SCStudyInterfaceRef &sc);
     bool threeConsecutiveHigherLows(SCStudyInterfaceRef &sc);
     bool threeConsecutiveLowerHighs(SCStudyInterfaceRef &sc);
@@ -26,27 +26,27 @@ class ThreeCandles {
 };
 
 inline bool ThreeCandles::isUp(SCStudyInterfaceRef &sc) {
-    return  areBarsInDaySession(sc) && threeConsecutiveHigherHighs(sc) && threeConsecutiveHigherLows(sc) && barHasClosed(sc);// && emaBellowLowOfCurrentBar(sc, period);
+    return  areBarsInDaySession(sc) && threeConsecutiveHigherHighs(sc) && threeConsecutiveHigherLows(sc);
 }
 
 inline bool ThreeCandles::isDown(SCStudyInterfaceRef &sc) {
-    return areBarsInDaySession(sc) && threeConsecutiveLowerHighs(sc) && threeConsecutiveLowerLows(sc) && barHasClosed(sc); //&& emaAboveHighOfCurrentBar(sc, period);
+    return areBarsInDaySession(sc) && threeConsecutiveLowerHighs(sc) && threeConsecutiveLowerLows(sc);
 }
 
 inline bool ThreeCandles::threeConsecutiveHigherHighs(SCStudyInterfaceRef &sc) {
-    return sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2];
+    return sc.High[sc.Index] > sc.High[sc.Index - 1] && sc.High[sc.Index - 1] > sc.High[sc.Index - 2] && barHasClosed(sc);;
 }
 
 inline bool ThreeCandles::threeConsecutiveHigherLows(SCStudyInterfaceRef &sc) {
-    return sc.Low[sc.Index] > sc.Low[sc.Index - 1] && sc.Low[sc.Index - 1] > sc.Low[sc.Index - 2];
+    return sc.Low[sc.Index] > sc.Low[sc.Index - 1] && sc.Low[sc.Index - 1] > sc.Low[sc.Index - 2] && barHasClosed(sc);
 }
 
 inline bool ThreeCandles::threeConsecutiveLowerHighs(SCStudyInterfaceRef &sc) {
-    return sc.High[sc.Index] < sc.High[sc.Index - 1] && sc.High[sc.Index - 1] < sc.High[sc.Index - 2];
+    return sc.High[sc.Index] < sc.High[sc.Index - 1] && sc.High[sc.Index - 1] < sc.High[sc.Index - 2] && barHasClosed(sc);
 }
 
 inline bool ThreeCandles::threeConsecutiveLowerLows(SCStudyInterfaceRef &sc) {
-    return sc.Low[sc.Index] < sc.Low[sc.Index - 1] && sc.Low[sc.Index - 1] < sc.Low[sc.Index - 2];
+    return sc.Low[sc.Index] < sc.Low[sc.Index - 1] && sc.Low[sc.Index - 1] < sc.Low[sc.Index - 2] && barHasClosed(sc);;
 }
 
 inline bool ThreeCandles::barHasClosed(SCStudyInterfaceRef &sc) {
