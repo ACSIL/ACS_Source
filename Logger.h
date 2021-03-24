@@ -14,10 +14,10 @@ class Logger {
 
     void writeToFile(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
     void writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
-    void setFileName(const std::string &fileName);
+    void setFileName(const SCString &fileName);
 
    private:
-    std::string fileName;
+    SCString fileName;
     std::string fileHeader;
 
     bool fileExists();
@@ -31,7 +31,7 @@ class Logger {
 inline Logger::Logger(SCStudyInterfaceRef &sc) {
 }
 
-inline void Logger::setFileName(const std::string &fileName) {
+inline void Logger::setFileName(const SCString &fileName) {
     this->fileName = fileName;
 }
 

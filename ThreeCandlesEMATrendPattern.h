@@ -13,21 +13,22 @@ class ThreeCandlesEMA : public ThreeCandles {
     void setEmaPeriod(const int &emaPeriod);
     void showEmaSubgraph(SCStudyInterfaceRef &sc, SCSubgraphRef &subgraphEMA);
 
-   private:
+   public:
     int emaPeriod;
-
     bool emaAboveCurrentPrice(SCStudyInterfaceRef &sc);
     bool emaBellowCurrentPrice(SCStudyInterfaceRef &sc);
     bool emaAboveHighOfCurrentBar(SCStudyInterfaceRef &sc);
     bool emaBellowLowOfCurrentBar(SCStudyInterfaceRef &sc);
 };
 
-bool ThreeCandlesEMA::isUp(SCStudyInterfaceRef &sc) {
-    return ThreeCandles::isUp(sc) && emaBellowLowOfCurrentBar(sc);
+
+
+bool ThreeCandlesEMA::isUp(SCStudyInterfaceRef &sc) {    
+    return emaBellowLowOfCurrentBar(sc) && areBarsInDaySession(sc) && threeConsecutiveHigherHighs(sc) && threeConsecutiveHigherLows(sc);
 }
 
 bool ThreeCandlesEMA::isDown(SCStudyInterfaceRef &sc) {
-    return ThreeCandles::isDown(sc) && emaAboveHighOfCurrentBar(sc);
+    return emaAboveHighOfCurrentBar(sc) && areBarsInDaySession(sc) && threeConsecutiveLowerHighs(sc) && threeConsecutiveLowerLows(sc) ;
 }
 
 inline void ThreeCandlesEMA::setEmaPeriod(const int &emaPeriod) {
