@@ -4,16 +4,23 @@
 
 SCDLLName("Nirvikalpa's Trend Patterns");
 
+
+// s_SCNewOrder& exitAtFixedTargetLoss(SCStudyInterfaceRef sc, s_SCNewOrder& order) {
+//     order.OrderQuantity = 1;
+//     order.OrderType = SCT_ORDERTYPE_MARKET;
+//     order.TextTag = "Three Candles Trend Pattern";
+//     order.Target1Offset = sc.Input[3].GetInt() * sc.TickSize;
+//     order.Stop1Offset = sc.Input[4].GetInt() * sc.TickSize;
+//     return order;
+// }
+
+
 SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
     SCInputRef inputStartTradingAt = sc.Input[0];
     SCInputRef inputStopTradingAt = sc.Input[1];
     SCInputRef inputFlatPostionAt = sc.Input[2];
 
-    SCInputRef inputProfitInTicks = sc.Input[3];
-    SCInputRef inputLossInTicks = sc.Input[4];
-
     SCInputRef inputEmaPeriod = sc.Input[10];
-
     SCSubgraphRef subgraphEMA = sc.Subgraph[0];
 
     if (sc.SetDefaults) {
@@ -28,10 +35,10 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
         inputFlatPostionAt.Name = "Flat postion at: ";
         inputFlatPostionAt.SetTime(HMS_TIME(14, 30, 00));
 
-        inputProfitInTicks.Name = "Profit in ticks";
-        inputProfitInTicks.SetInt(30);
-        inputLossInTicks.Name = "Loss in ticks";
-        inputLossInTicks.SetInt(30);
+        sc.Input[3].Name = "Profit in ticks";
+        sc.Input[3].SetInt(30);
+        sc.Input[4].Name = "Loss in ticks";
+        sc.Input[4].SetInt(30);
 
         sc.Subgraph[1].Name = "visible";
         sc.Subgraph[1].DrawStyle = DRAWSTYLE_COLOR_BAR;
@@ -42,6 +49,9 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
         subgraphEMA.PrimaryColor = RGB(102, 255, 102);
         inputEmaPeriod.Name = "Exp. Moving Average Period";
         inputEmaPeriod.SetInt(10);
+
+
+		sc.MaintainTradeStatisticsAndTradesData = true;
 
         return;
     }
@@ -56,34 +66,40 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
 
     if (p_ThreeCandlesEMA == NULL)
         p_ThreeCandlesEMA = (aos::trend::ThreeCandlesEMA *)new aos::trend::ThreeCandlesEMA();
+   
+    s_SCPositionData position;
+    sc.GetTradePosition(position);
 
+    // ema
     int emaPeriod = inputEmaPeriod.GetInt();
     p_ThreeCandlesEMA->setEmaPeriod(emaPeriod);
     p_ThreeCandlesEMA->showEmaSubgraph(sc, subgraphEMA);
 
-    s_SCPositionData position;
-    sc.GetTradePosition(position);
-    s_SCNewOrder order;
-    order.OrderQuantity = 1;
-    order.OrderType = SCT_ORDERTYPE_MARKET;
-    order.TextTag = "Three Candles Trend Pattern";
-    order.Target1Offset = inputProfitInTicks.GetInt() * sc.TickSize;
-    order.Stop1Offset = inputLossInTicks.GetInt() * sc.TickSize;
-
+    // orders
+    s_SCNewOrder newOrder;
+    newOrder.OrderQuantity = 1;
+    newOrder.OrderType = SCT_ORDERTYPE_MARKET;
+    newOrder.TimeInForce = SCT_TIF_GOOD_TILL_CANCELED;
+    newOrder.TextTag = "Three Candles Trend Pattern";
+    
     bool areTradingHours = sc.BaseDateTimeIn[sc.Index].GetTime() > inputStartTradingAt.GetTime() && sc.BaseDateTimeIn[sc.Index].GetTime() < inputStopTradingAt.GetTime();
     bool isTimeToFlat = sc.BaseDateTimeIn[sc.Index].GetTime() >= inputFlatPostionAt.GetTime();
     bool positionOpened = position.PositionQuantity != 0;
-
+    bool priceCrossedEmaFromBellow = sc.CrossOver(sc.Close, subgraphEMA) == CROSS_FROM_TOP && sc.GetBarHasClosedStatus() == BHCS_BAR_HAS_CLOSED;
+    
+    
     if (areTradingHours) {
-        // if (p_ThreeCandlesEMA->isUp(sc) && p_ThreeCandlesEMA->emaBellowLowOfCurrentBar(sc)) {
-        //     // int entryCheck = (int)sc.BuyEntry(order);
-        //     // sc.Subgraph[1][sc.Index] = sc.Index;
-        // }
-        if (p_ThreeCandlesEMA->isDown(sc)) {
-            int entryCheck = (int)sc.SellEntry(order);
+        if (p_ThreeCandlesEMA->isUp(sc)) {
+            int entryCheck = (int)sc.BuyEntry(newOrder);
             sc.Subgraph[1][sc.Index] = sc.Index;
-
         }
+        else if (positionOpened && priceCrossedEmaFromBellow) {
+            (int)sc.BuyExit(newOrder);
+        }
+        // if (p_ThreeCandlesEMA->isDown(sc)) {
+        //     int entryCheck = (int)sc.SellEntry(order);
+        //     sc.Subgraph[1][sc.Index] = sc.Index;
+        // }
     }
 
     if (positionOpened && isTimeToFlat) sc.FlattenPosition();

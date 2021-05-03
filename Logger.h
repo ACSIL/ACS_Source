@@ -42,12 +42,9 @@ inline Logger::Logger(SCStudyInterfaceRef &sc) {
     this->fileName = chartName + ".csv";
 }
 
-<<<<<<< HEAD
-=======
 inline void Logger::setFileName(const SCString &fileName) {
     this->fileName = fileName;
 }
->>>>>>> tmp
 
 inline SCString Logger::createString(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03) {
     s_SCPositionData position;

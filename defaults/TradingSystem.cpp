@@ -59,7 +59,12 @@ SCSFExport scsf_TradingExample(SCStudyInterfaceRef sc)
 		Input_StopValue.Name = "Stop Value";
 		Input_StopValue.SetFloat(1.0f);
 
-		sc.StudyDescription = "This study function is an example of how to use the ACSIL Trading Functions. This function will display a simple moving average and perform a Buy Entry when the Last price crosses the moving average from below and a Sell Entry when the Last price crosses the moving average from above. A new entry cannot occur until the Target or Stop has been hit. When an order is sent, a corresponding arrow will appear on the chart to show that an order was sent. This study will do nothing until the Enabled Input is set to Yes.";
+		// sc.StudyDescription = "This study function is an example of how to use the ACSIL Trading Functions. 
+		// This function will display a simple moving average and perform a Buy Entry when the Last price crosses the moving average 
+		// from below and a Sell Entry when the Last price crosses the moving average from above. 
+		// A new entry cannot occur until the Target or Stop has been hit. When an order is sent,
+		//  a corresponding arrow will appear on the chart to show that an order was sent. This study
+		//   will do nothing until the Enabled Input is set to Yes.";
 
 		sc.AutoLoop = 1;
 		sc.GraphRegion = 0;
@@ -144,7 +149,9 @@ SCSFExport scsf_TradingExample(SCStudyInterfaceRef sc)
 	}
 	
 	
-	// When there is a long position AND the Last price is less than the price the Buy Entry was filled at minus Stop Value, OR there is a long position AND the Last price is greater than the price the Buy Entry was filled at plus the Target Value.
+	// When there is a long position AND the Last price is less 
+	// than the price the Buy Entry was filled at minus Stop Value, 
+	// OR there is a long position AND the Last price is greater than the price the Buy Entry was filled at plus the Target Value.
 	else if (PositionData.PositionQuantity > 0
 		&& (LastTradePrice <= PositionData.AveragePrice - Input_StopValue.GetFloat() || 
 		LastTradePrice >= PositionData.AveragePrice + Input_TargetValue.GetFloat())) 
@@ -171,7 +178,9 @@ SCSFExport scsf_TradingExample(SCStudyInterfaceRef sc)
 		}
 	}
 	
-	// When there is a short position AND the Last price is greater than the price the Sell Entry was filled at plus the Stop Value, OR there is a short position AND the Last price is less than the price the Sell Entry was filled at minus the Target Value.
+	// When there is a short position AND the Last price is greater than the price the Sell Entry was 
+	// filled at plus the Stop Value, OR there is a short position AND the Last price is less than the
+	// price the Sell Entry was filled at minus the Target Value.
 	else if (PositionData.PositionQuantity < 0 
 		&& (LastTradePrice >= PositionData.AveragePrice + Input_StopValue.GetFloat() ||
 		LastTradePrice <= PositionData.AveragePrice - Input_TargetValue.GetFloat())) 
@@ -236,7 +245,13 @@ SCSFExport scsf_TradingExampleWithAttachedOrders(SCStudyInterfaceRef sc)
 		Input_Enabled.Name = "Enabled";
 		Input_Enabled.SetYesNo(0); 
 
-		sc.StudyDescription = "This study function is an example of how to use the ACSIL Trading Functions.  This example uses the Attached Orders defined on the chart Trade Window. This function will display a simple moving average and perform a Buy Entry when the Last price crosses the moving average from below and a Sell Entry when the Last price crosses the moving average from above. A new entry cannot occur until the Target or Stop has been hit. When an order is sent, a corresponding arrow will appear on the chart to show that an order was sent. This study will do nothing until the Enabled Input is set to Yes.";
+		sc.StudyDescription = "This study function is an example of how to use the ACSIL Trading Functions. 
+		 This example uses the Attached Orders defined on the chart Trade Window.
+		  This function will display a simple moving average and perform a Buy Entry 
+		  		when the Last price crosses the moving average from below and a Sell Entry 
+		  when the Last price crosses the moving average from above. A new entry cannot occur 
+		  until the Target or Stop has been hit. When an order is sent, a corresponding 
+		  arrow will appear on the chart to show that an order was sent. This study will do nothing until the Enabled Input is set to Yes.";
 
 		sc.AutoLoop = 1;
 		sc.GraphRegion = 0;

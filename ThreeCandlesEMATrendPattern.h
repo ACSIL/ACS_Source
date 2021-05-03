@@ -9,11 +9,12 @@ class ThreeCandlesEMA : public ThreeCandles {
    public:
     bool isUp(SCStudyInterfaceRef &sc);
     bool isDown(SCStudyInterfaceRef &sc);
-
     void setEmaPeriod(const int &emaPeriod);
     void showEmaSubgraph(SCStudyInterfaceRef &sc, SCSubgraphRef &subgraphEMA);
+    s_SCNewOrder& exitAtEMACross(SCStudyInterfaceRef sc, s_SCNewOrder& order);
 
-   public:
+
+   private:
     int emaPeriod;
     bool emaAboveCurrentPrice(SCStudyInterfaceRef &sc);
     bool emaBellowCurrentPrice(SCStudyInterfaceRef &sc);
@@ -21,14 +22,12 @@ class ThreeCandlesEMA : public ThreeCandles {
     bool emaBellowLowOfCurrentBar(SCStudyInterfaceRef &sc);
 };
 
-
-
-bool ThreeCandlesEMA::isUp(SCStudyInterfaceRef &sc) {    
+bool ThreeCandlesEMA::isUp(SCStudyInterfaceRef &sc) {
     return emaBellowLowOfCurrentBar(sc) && areBarsInDaySession(sc) && threeConsecutiveHigherHighs(sc) && threeConsecutiveHigherLows(sc);
 }
 
 bool ThreeCandlesEMA::isDown(SCStudyInterfaceRef &sc) {
-    return emaAboveHighOfCurrentBar(sc) && areBarsInDaySession(sc) && threeConsecutiveLowerHighs(sc) && threeConsecutiveLowerLows(sc) ;
+    return emaAboveHighOfCurrentBar(sc) && areBarsInDaySession(sc) && threeConsecutiveLowerHighs(sc) && threeConsecutiveLowerLows(sc);
 }
 
 inline void ThreeCandlesEMA::setEmaPeriod(const int &emaPeriod) {
@@ -37,6 +36,14 @@ inline void ThreeCandlesEMA::setEmaPeriod(const int &emaPeriod) {
 
 inline void ThreeCandlesEMA::showEmaSubgraph(SCStudyInterfaceRef &sc, SCSubgraphRef subgraphEMA) {
     sc.ExponentialMovAvg(sc.BaseDataIn[SC_LAST], subgraphEMA.Data, emaPeriod);
+}
+
+inline s_SCNewOrder& ThreeCandlesEMA::exitAtEMACross(SCStudyInterfaceRef sc, s_SCNewOrder& order){
+    order.OrderQuantity = 1;
+    order.OrderType = SCT_ORDERTYPE_MARKET;
+    order.TextTag = "Three Candles Trend Pattern";
+
+    return order;
 }
 
 inline bool ThreeCandlesEMA::emaAboveCurrentPrice(SCStudyInterfaceRef &sc) {

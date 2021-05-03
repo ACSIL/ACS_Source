@@ -1,6 +1,8 @@
 // Logger study responsible for writing entry details to csv file.
-// Besides basic infor as entry price, qty, market, it also logs some basic market stats [ATR, Volume, Cum.Delta] and these can be extended.
+// Besides basic infor as entry price, qty, market, it also logs some basic market stats (indicators which are on the chrt) and these can be extended.
 // The point is to use this study with every trading system, colect the data and run some data-analysis on them
+// Just add this studz anytime you need to log some data to external file
+
 
 #include "Logger.h"
 
@@ -57,7 +59,6 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
 
     if (p_Logger == NULL) p_Logger = (study::log::Logger*)new study::log::Logger(sc);
 
-<<<<<<< HEAD
     std::string chartName {sc.GetChartName(sc.ChartNumber)};
     std::string::iterator endPos = std::remove(chartName.begin(), chartName.end(), ' ');
     chartName.erase(endPos, chartName.end());
@@ -65,11 +66,6 @@ SCSFExport scsf_Logger(SCStudyInterfaceRef sc) {
 
     if (fileLogAllowed.GetBoolean() == 1) {
         // p_Logger->setFileName(fileName);
-=======
-
-    if (fileLogAllowed.GetBoolean() == 1) {
-        p_Logger->setFileName(sc.Input[4].GetString());
->>>>>>> tmp
         p_Logger->writeToFile(sc, study01, study02, study03);
     }
 

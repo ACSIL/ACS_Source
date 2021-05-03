@@ -2,6 +2,6 @@
 C:\SierraChart\ACS_Source>call "C:\Program Files\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64 
 The system cannot find the path specified.
 
-C:\SierraChart\ACS_Source>cl /Zc:wchar_t /GS /GL /W3 /O2 /Zc:inline /D "NDEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL" /Oy /Gd /Gy /Oi /GR- /GF /Ot /fp:precise /MT /std:c++17 /LD /EHa /WX- /nologo "C:\SierraChart\ACS_Source\ThreeCandlesTrendPattern.h" "C:\SierraChart\ACS_Source\ThreeCandlesEMATrendPattern.h" "C:\SierraChart\ACS_Source\MainTrendPattern.cpp"  /link "Gdi32.lib" /DLL /DYNAMICBASE /INCREMENTAL:NO /OPT:REF /OPT:ICF /MACHINE:X64 /OUT:"C:\SierraChart\Data\ThreeCandlesTrendPattern_64.dll" 
+C:\SierraChart\ACS_Source>cl /Zc:wchar_t /GS /GL /W3 /O2 /Zc:inline /D "NDEBUG" /D "_WINDOWS" /D "_USRDLL" /D "_WINDLL" /Oy /Gd /Gy /Oi /GR- /GF /Ot /fp:precise /MT /std:c++17 /LD /EHa /WX- /nologo "C:\SierraChart\ACS_Source\util.h" "C:\SierraChart\ACS_Source\ACSILsandbox.cpp"  /link "Gdi32.lib" /DLL /DYNAMICBASE /INCREMENTAL:NO /OPT:REF /OPT:ICF /MACHINE:X64 /OUT:"C:\SierraChart\Data\util_64.dll" 
 'cl' is not recognized as an internal or external command,
 operable program or batch file.
