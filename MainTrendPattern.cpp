@@ -86,7 +86,7 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
     bool isTimeToFlat = sc.BaseDateTimeIn[sc.Index].GetTime() >= inputFlatPostionAt.GetTime();
     bool positionOpened = position.PositionQuantity != 0;
     bool priceCrossedEmaFromBellow = sc.CrossOver(sc.Close, subgraphEMA) == CROSS_FROM_TOP && sc.GetBarHasClosedStatus() == BHCS_BAR_HAS_CLOSED;
-    
+     
     
     if (areTradingHours) {
         if (p_ThreeCandlesEMA->isUp(sc)) {

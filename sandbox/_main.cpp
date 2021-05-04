@@ -63,6 +63,26 @@ std::string getCurrentTime() {
 #include <iostream>
 #include <sstream>
 
-int main() {
-    std::cout << getCurrentTime();
+// zobrazuje nulu kdyz vyskocim z loopu protoze cin vynuluje ten proud
+void circularArray(){
+    int arr[3] = {};
+    int input;
+    int arrLength = sizeof(arr) / sizeof(arr[0]);
+    int index = 0;
+    
+    while (cin) {
+        cin >> input;
+        arr[index++] = input;
+        if (index >= arrLength) index = 0;
+        
     }
+    cout << "=============\n";
+    for (int i : arr) cout << i << "\n";
+}
+
+
+
+int main() {
+
+   
+}
