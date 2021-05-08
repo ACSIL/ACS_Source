@@ -8,7 +8,9 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
     SCInputRef inputStartTradingAt = sc.Input[0];
     SCInputRef inputStopTradingAt = sc.Input[1];
     SCInputRef inputFlatPostionAt = sc.Input[2];
+
     SCInputRef inputEmaPeriod = sc.Input[10];
+    SCInputRef inputStudySubgraphReference = sc.Input[11];
 
     SCSubgraphRef subgraphEMA = sc.Subgraph[0];
     SCSubgraphRef subgraphValidEntryBar = sc.Subgraph[1];
@@ -32,6 +34,12 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
         sc.Input[4].Name = "Loss in ticks";
         sc.Input[4].SetInt(30);
 
+        inputEmaPeriod.Name = "Exp. Moving Average Period";
+        inputEmaPeriod.SetInt(10);
+
+        inputStudySubgraphReference.Name = "Volatility Trend Indicator Subgraph to Display";
+        inputStudySubgraphReference.SetStudySubgraphValues(7, 1);
+
         subgraphValidEntryBar.Name = "Bar Marker";
         subgraphValidEntryBar.DrawStyle = DRAWSTYLE_COLOR_BAR;
         subgraphValidEntryBar.PrimaryColor = RGB(0, 0, 255);
@@ -49,8 +57,7 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
         subgraphEMA.Name = "Exp. Moving Average";
         subgraphEMA.DrawStyle = DRAWSTYLE_LINE;
         subgraphEMA.PrimaryColor = RGB(102, 255, 102);
-        inputEmaPeriod.Name = "Exp. Moving Average Period";
-        inputEmaPeriod.SetInt(10);
+
 
         sc.MaintainTradeStatisticsAndTradesData = true;
 
@@ -88,26 +95,47 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
     bool positionOpened = position.PositionQuantity != 0;
     bool priceCrossedEmaFromBellow = sc.CrossOver(sc.Close, subgraphEMA) == CROSS_FROM_TOP && sc.GetBarHasClosedStatus() == BHCS_BAR_HAS_CLOSED;
 
+    // for further modifications
+    int64_t& r_BuyEntryInternalOrderID = sc.GetPersistentInt64(1);
+    int64_t& r_SellEntryInternalOrderID = sc.GetPersistentInt64(2);
+
+
+    SCFloatArray volatilityTrendIndivator;
+    sc.GetStudyArrayUsingID(inputStudySubgraphReference.GetStudyID(), inputStudySubgraphReference.GetSubgraphIndex(), volatilityTrendIndivator);
+    float volatilityTrendIndivatorValue = volatilityTrendIndivator[sc.Index];
+    bool isVolatilityTrendIndicatorAboveCurrentPrice = volatilityTrendIndivatorValue > sc.Close[sc.Index];
+    bool isVolatilityTrendIndicatorBellowCurrentPrice = volatilityTrendIndivatorValue < sc.Close[sc.Index];
+
     if (areTradingHours) {
-        if (p_ThreeCandlesEMA->isUp(sc)) {
+        if (p_ThreeCandlesEMA->isUp(sc) && isVolatilityTrendIndicatorBellowCurrentPrice) {
             subgraphValidEntryBar[sc.Index] = sc.Index;
             int entryCheck = (int)sc.BuyEntry(newOrder);
             if (entryCheck > 0) {
-                sc.AddMessageToLog(entryCheck, 1);
+                SCString entryCheckStr;
+                entryCheckStr.Format("EntryCheck: %d", entryCheck);
+                sc.AddMessageToLog(entryCheckStr, 0);
+
+                r_BuyEntryInternalOrderID = newOrder.InternalOrderID;
+                SCString internalOrderIDNumberString;
+                internalOrderIDNumberString.Format("BuyEntry Internal Order ID: %d", r_BuyEntryInternalOrderID);
+                sc.AddMessageToLog(internalOrderIDNumberString, 1);
+
                 subgraphBuyEntry[sc.Index] = sc.Low[sc.Index];
             }
         } else if (positionOpened && priceCrossedEmaFromBellow) {
             (int)sc.BuyExit(newOrder);
-        } else if (p_ThreeCandlesEMA->isDown(sc)) {
-            subgraphValidEntryBar[sc.Index] = sc.Index;
-            int entryCheck = (int)sc.SellEntry(newOrder);
-            if (entryCheck > 0) {
-                sc.AddMessageToLog(entryCheck, 1);
-                subgraphSellEntry[sc.Index] = sc.High[sc.Index];
-            }
-        } else if (positionOpened && priceCrossedEmaFromBellow) {
-            (int)sc.SellExit(newOrder);
         }
+
+        // } else if (p_ThreeCandlesEMA->isDown(sc)) {
+        //     subgraphValidEntryBar[sc.Index] = sc.Index;
+        //     int entryCheck = (int)sc.SellEntry(newOrder);
+        //     if (entryCheck > 0) {
+        //         sc.AddMessageToLog(entryCheck, 1);
+        //         subgraphSellEntry[sc.Index] = sc.High[sc.Index];
+        //     }
+        // } else if (positionOpened && priceCrossedEmaFromBellow) {
+        //     (int)sc.SellExit(newOrder);
+        // }
     }
 
     if (positionOpened && isTimeToFlat) sc.FlattenPosition();
