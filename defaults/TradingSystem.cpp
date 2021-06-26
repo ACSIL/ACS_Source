@@ -1598,6 +1598,7 @@ SCSFExport scsf_TradingSystemStudySubgraphCrossover(SCStudyInterfaceRef sc)
 	{
 		return;
 	}
+	
 
 	// using the Input_Line1Ref and Input_Line2Ref input variables, retrieve the subgraph arrays
 	SCFloatArray StudyLine1;

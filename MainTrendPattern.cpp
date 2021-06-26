@@ -90,21 +90,26 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
     newOrder.TimeInForce = SCT_TIF_GOOD_TILL_CANCELED;
     newOrder.TextTag = "Three Candles Trend Pattern";
 
+    // trading times
     bool areTradingHours = sc.BaseDateTimeIn[sc.Index].GetTime() > inputStartTradingAt.GetTime() && sc.BaseDateTimeIn[sc.Index].GetTime() < inputStopTradingAt.GetTime();
     bool isTimeToFlat = sc.BaseDateTimeIn[sc.Index].GetTime() >= inputFlatPostionAt.GetTime();
+    
+    // volatility ubgraph array reference
+    SCFloatArray volatilityTrendIndivator;
+    sc.GetStudyArrayUsingID(inputStudySubgraphReference.GetStudyID(), inputStudySubgraphReference.GetSubgraphIndex(), volatilityTrendIndivator);
+    bool isVolatilityTrendIndicatorAboveCurrentPrice = volatilityTrendIndivator[sc.Index] > sc.Close[sc.Index];
+    bool isVolatilityTrendIndicatorBellowCurrentPrice = volatilityTrendIndivator[sc.Index] < sc.Close[sc.Index];
+
+    // closing positions logic   
     bool positionOpened = position.PositionQuantity != 0;
-    bool priceCrossedEmaFromBellow = sc.CrossOver(sc.Close, subgraphEMA) == CROSS_FROM_TOP && sc.GetBarHasClosedStatus() == BHCS_BAR_HAS_CLOSED;
+    bool priceCrossedEmaFromTop = sc.CrossOver(sc.Close, subgraphEMA) == CROSS_FROM_TOP && sc.GetBarHasClosedStatus() == BHCS_BAR_HAS_CLOSED;
+    bool priceCrossedEmaAndVolatilityTrendIndivatorFromTop = subgraphEMA[sc.Index] > sc.Close[sc.Index] && volatilityTrendIndivator[sc.Index] > sc.Close[sc.Index];
+
 
     // for further modifications
     int64_t& r_BuyEntryInternalOrderID = sc.GetPersistentInt64(1);
     int64_t& r_SellEntryInternalOrderID = sc.GetPersistentInt64(2);
 
-
-    SCFloatArray volatilityTrendIndivator;
-    sc.GetStudyArrayUsingID(inputStudySubgraphReference.GetStudyID(), inputStudySubgraphReference.GetSubgraphIndex(), volatilityTrendIndivator);
-    float volatilityTrendIndivatorValue = volatilityTrendIndivator[sc.Index];
-    bool isVolatilityTrendIndicatorAboveCurrentPrice = volatilityTrendIndivatorValue > sc.Close[sc.Index];
-    bool isVolatilityTrendIndicatorBellowCurrentPrice = volatilityTrendIndivatorValue < sc.Close[sc.Index];
 
     if (areTradingHours) {
         if (p_ThreeCandlesEMA->isUp(sc) && isVolatilityTrendIndicatorBellowCurrentPrice) {
@@ -122,7 +127,7 @@ SCSFExport scsf_TrendPatterns(SCStudyInterfaceRef sc) {
 
                 subgraphBuyEntry[sc.Index] = sc.Low[sc.Index];
             }
-        } else if (positionOpened && priceCrossedEmaFromBellow) {
+        } else if (positionOpened && priceCrossedEmaAndVolatilityTrendIndivatorFromTop) {
             (int)sc.BuyExit(newOrder);
         }
 

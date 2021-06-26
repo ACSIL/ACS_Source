@@ -118,10 +118,10 @@ SCSFExport scsf_ColorBarsFromStartOfSession(SCStudyInterfaceRef sc) {
 
     int startIndex = util::DateTime::getFirstIndexOfSession(sc);
 
-    util::Logger::log(sc, startIndex, "starting index");
-    util::Logger::log(sc, sc.Index, "sc.Index index");
-    util::Logger::log(sc, sc.IndexOfFirstVisibleBar, "sc.FirstVisible index");
-    util::Logger::log(sc, sc.IndexOfLastVisibleBar, "sc.LastVisible index");
+    // util::Logger::log(sc, startIndex, "starting index");
+    // util::Logger::log(sc, sc.Index, "sc.Index index");
+    // util::Logger::log(sc, sc.IndexOfFirstVisibleBar, "sc.FirstVisible index");
+    // util::Logger::log(sc, sc.IndexOfLastVisibleBar, "sc.LastVisible index");
 
     if (sc.Index > startIndex) {
         Subgraph_IB[sc.Index] = startIndex;
@@ -221,13 +221,13 @@ SCSFExport scsf_LogUtilsTest(SCStudyInterfaceRef sc) {
     }
     SCDateTime TradingDayStartDateTime = sc.GetTradingDayStartDateTimeOfBar(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
 
-    util::Logger::log(sc, TradingDayStartDateTime, "datetime");
-    util::Logger::log(sc, 22, "int");
-    util::Logger::log(sc, 3.23, "double");
-    util::Logger::log(sc, "hello work", "string");
+    // util::Logger::log(sc, TradingDayStartDateTime, "datetime");
+    // util::Logger::log(sc, 22, "int");
+    // util::Logger::log(sc, 3.23, "double");
+    // util::Logger::log(sc, "hello work", "string");
 }
 
-SCSFExport scsf_GetValuesFromTheSameChart(SCStudyInterfaceRef sc) {
+SCSFExport scsf_GetLastValueFromStudyOnSameChart(SCStudyInterfaceRef sc) {
     SCInputRef Input_StudySubgraphReference = sc.Input[0];
 
     if (sc.SetDefaults) {
@@ -243,7 +243,6 @@ SCSFExport scsf_GetValuesFromTheSameChart(SCStudyInterfaceRef sc) {
     sc.GetStudyArrayUsingID(Input_StudySubgraphReference.GetStudyID(), Input_StudySubgraphReference.GetSubgraphIndex(), StudyReference);
     float StudyValue = StudyReference[sc.IndexOfLastVisibleBar];
 
-    
     s_UseTool t;
     t.Clear();
     t.ChartNumber = sc.ChartNumber;
@@ -262,8 +261,7 @@ SCSFExport scsf_GetValuesFromTheSameChart(SCStudyInterfaceRef sc) {
     sc.UseTool(t);
 }
 
-
-SCSFExport scsf_readLastNValuesToArray(SCStudyInterfaceRef sc){
+SCSFExport scsf_GetNLastValuesFromStudyOnTheSameChartUsingRawAwway(SCStudyInterfaceRef sc) {
     SCInputRef Input_StudySubgraphReference = sc.Input[0];
 
     if (sc.SetDefaults) {
@@ -275,11 +273,52 @@ SCSFExport scsf_readLastNValuesToArray(SCStudyInterfaceRef sc){
         return;
     }
 
-        int* arr = (int*)sc.GetPersistentPointer(1);
-        
+    // get some study reference
+    SCFloatArray StudyReference;
+    sc.GetStudyArrayUsingID(Input_StudySubgraphReference.GetStudyID(), Input_StudySubgraphReference.GetSubgraphIndex(), StudyReference);
+    double StudyValueLast = StudyReference[sc.IndexOfLastVisibleBar];
 
+    // create an array (or a vector or etc.. ) on the heap
+    int const ARR_SIZE = 5;
+    double* p_myArray = (double*)sc.GetPersistentPointer(1);
+    p_myArray = new double[ARR_SIZE];
+    
+    // make sure you delete the array after study is removed
+    if (p_myArray != nullptr && sc.LastCallToFunction) {
+        delete[] p_myArray;
+        sc.SetPersistentPointer(1, NULL);
+        return;
+    }
 
+    // get get value of close for last 5 bars
+    for (int i = 0; i < ARR_SIZE; ++i) {
+        p_myArray[i] = sc.Close[sc.IndexOfLastVisibleBar - i];
+        p_myArray[i] = StudyReference[sc.IndexOfLastVisibleBar - i]; // int the same way you could get value of some indicator for the last five indexes
 
+        util::Logger::log(sc, p_myArray[i], 0, "value  ");
+    }
+
+    // now i have values in the array so i can do some calculations.. (it is actually better to use stl:: collection)
+    double sum = 0;
+    for (double const &d: p_myArray) sum +=d;
+    
+
+    util::Logger::log(sc, "outside while.. ", 0);
+}
+
+SCSFExport scsf_readLastNValuesToArray(SCStudyInterfaceRef sc) {
+    SCInputRef Input_StudySubgraphReference = sc.Input[0];
+
+    if (sc.SetDefaults) {
+        sc.UpdateAlways = 1;
+        sc.GraphRegion = 0;
+
+        Input_StudySubgraphReference.Name = "Study and Subgraph to Display";
+        Input_StudySubgraphReference.SetStudySubgraphValues(7, 1);
+        return;
+    }
+
+    int* arr = (int*)sc.GetPersistentPointer(1);
 }
 
 SCSFExport scsf_GetValuesFromAnotherCharts(SCStudyInterfaceRef sc) {
@@ -318,9 +357,9 @@ SCSFExport scsf_CheckIfTimeInSessions(SCStudyInterfaceRef sc) {
     int IsInEveningSession = sc.IsDateTimeInEveningSession(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
     int IsInSession = sc.IsDateTimeInSession(sc.BaseDateTimeIn[sc.IndexOfLastVisibleBar]);
 
-    util::Logger::log(sc, util::DateTime::isCurrentBarInDaySession(sc), " IsInDaySession");
-    util::Logger::log(sc, util::DateTime::isCurrentBarInNightSession(sc), " IsInEveningSession");
-    util::Logger::log(sc, util::DateTime::isCurrentBarInSession(sc), " IsInSession");
+    // util::Logger::log(sc, util::DateTime::isCurrentBarInDaySession(sc), " IsInDaySession");
+    // util::Logger::log(sc, util::DateTime::isCurrentBarInNightSession(sc), " IsInEveningSession");
+    // util::Logger::log(sc, util::DateTime::isCurrentBarInSession(sc), " IsInSession");
 }
 
 SCSFExport scsf_DrawTextToChart(SCStudyInterfaceRef sc) {
@@ -479,7 +518,7 @@ SCSFExport scsf_ColorBarWithCloseAboveEma(SCStudyInterfaceRef sc) {
         return;
     }
     sc.DataStartIndex = Input_Length.GetInt() - 1;
-
+    sc.Add
     sc.SimpleMovAvg(sc.Close, Subgraph_Average, Input_Length.GetInt());
 
     if (sc.Close[sc.Index] > Subgraph_Average[sc.Index]) {

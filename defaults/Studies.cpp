@@ -5046,7 +5046,7 @@ SCSFExport scsf_CustomScaling(SCStudyInterfaceRef sc)
 		
 		return;
 	}
-	
+	sc.AddMessageToLog()
 	
 	// Do data processing
 	

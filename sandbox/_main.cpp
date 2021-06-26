@@ -64,25 +64,51 @@ std::string getCurrentTime() {
 #include <sstream>
 
 // zobrazuje nulu kdyz vyskocim z loopu protoze cin vynuluje ten proud
-void circularArray(){
+void circularArray() {
     int arr[3] = {};
     int input;
     int arrLength = sizeof(arr) / sizeof(arr[0]);
     int index = 0;
-    
+
     while (cin) {
         cin >> input;
         arr[index++] = input;
         if (index >= arrLength) index = 0;
-        
     }
     cout << "=============\n";
     for (int i : arr) cout << i << "\n";
 }
 
+void rangeForLoopRawArrayOStack() {
+    //array na stacku
+    int a[] = {1, 2, 3, 4};
+    for (int& i : a) // range based ok funguje
+
+    //array na heapu
+    int *a = new int[5];
+    for(int &i: *a) // range based ok funguje
+ 
+
+void rangeForWithRawArrayOnHeap(){
+    //array na heapu
+    int *a = new int[5];
+    for(int &i: *a) // range based ok funguje
+    {//} 
+
+    int (*b)[4] = new int[1][4]{{1, 2, 3, 4}};
+    for(int &n : *b)
+    {//}
+
+    delete[] a;
+}
+
 
 
 int main() {
+    // rangeForLoopRawArray();
+    int arraypointer* = new int[4];
 
-   
+    for(int &n : *arraypointer)
+        cout << n << "\n";
+
 }
