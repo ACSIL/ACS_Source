@@ -14,10 +14,6 @@ class Logger {
 
     void writeToFile(SCStudyInterfaceRef &sc, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
     void writeEntryDataToMessageLog(SCStudyInterfaceRef &sc, s_SCPositionData &position, SCFloatArray &study01, SCFloatArray &study02, SCFloatArray &study03);
-<<<<<<< HEAD
-=======
-    void setFileName(const SCString &fileName);
->>>>>>> tmp
 
    private:
     SCString fileName;
